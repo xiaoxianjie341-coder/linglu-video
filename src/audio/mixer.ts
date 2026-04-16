@@ -1,0 +1,214 @@
+import { writeFile, unlink } from 'node:fs/promises';
+import { getFFmpegCommand, runFFmpeg } from '../post/ffmpeg.js';
+import { createLogger } from '../utils/logger.js';
+
+/** Escape a file path for FFmpeg concat list format (single-quote wrapping). */
+function escapeForConcatList(filePath: string): string {
+  return filePath.replace(/'/g, "'\\''");
+}
+
+const log = createLogger('audio-mixer');
+
+export interface PositionedSoundEffect {
+  path: string;
+  timestampMs: number;
+  volume: number;
+}
+
+export interface MixInput {
+  narration: string;
+  music?: string;
+  soundEffects?: PositionedSoundEffect[];
+  narrationVolume?: number;
+  musicVolume?: number;
+  musicFadeIn?: number;
+  musicFadeOut?: number;
+  totalDuration?: number;
+}
+
+export async function concatenateNarration(
+  audioPaths: string[],
+  outputPath: string,
+): Promise<void> {
+  if (audioPaths.length === 0) return;
+
+  if (audioPaths.length === 1) {
+    const { copy } = await import('fs-extra');
+    await copy(audioPaths[0], outputPath);
+    return;
+  }
+
+  log.info('Concatenating narration', { segments: audioPaths.length });
+
+  const listPath = outputPath.replace('.mp3', '-concat-list.txt');
+  const listContent = audioPaths.map((p) => `file '${escapeForConcatList(p)}'`).join('\n');
+  await writeFile(listPath, listContent, 'utf-8');
+
+  try {
+    const command = getFFmpegCommand(listPath)
+      .inputOptions(['-f', 'concat', '-safe', '0'])
+      .audioCodec('libmp3lame')
+      .audioBitrate('192k')
+      .output(outputPath);
+
+    await runFFmpeg(command);
+    log.info('Narration concatenated', { output: outputPath });
+  } finally {
+    await unlink(listPath).catch(() => {});
+  }
+}
+
+/**
+ * Position narration segments at their computed scene start times using adelay,
+ * instead of sequential concatenation. This ensures each narration segment
+ * plays at the correct point in the final video timeline.
+ */
+export async function positionNarration(
+  segments: Array<{ audioPath: string; startTimeMs: number }>,
+  totalDurationMs: number,
+  outputPath: string,
+): Promise<void> {
+  if (segments.length === 0) return;
+
+  if (segments.length === 1 && segments[0].startTimeMs === 0) {
+    const { copy } = await import('fs-extra');
+    await copy(segments[0].audioPath, outputPath);
+    return;
+  }
+
+  log.info('Positioning narration segments', {
+    segments: segments.length,
+    totalDurationMs,
+  });
+
+  const filterParts: string[] = [];
+  const segLabels: string[] = [];
+
+  for (let i = 0; i < segments.length; i++) {
+    const delayMs = Math.max(0, Math.round(segments[i].startTimeMs));
+    filterParts.push(
+      `[${i}:a]aresample=44100,adelay=${delayMs}|${delayMs}[seg_${i}]`,
+    );
+    segLabels.push(`[seg_${i}]`);
+  }
+
+  // Mix all positioned segments (normalize=0 because segments don't overlap)
+  filterParts.push(
+    `${segLabels.join('')}amix=inputs=${segments.length}:duration=longest:normalize=0[out]`,
+  );
+
+  let command = getFFmpegCommand(segments[0].audioPath);
+  for (let i = 1; i < segments.length; i++) {
+    command = command.input(segments[i].audioPath);
+  }
+
+  command = command
+    .complexFilter(filterParts)
+    .outputOptions(['-map', '[out]', '-t', String(totalDurationMs / 1000)])
+    .audioCodec('libmp3lame')
+    .audioBitrate('192k')
+    .output(outputPath);
+
+  await runFFmpeg(command);
+  log.info('Narration positioned', { output: outputPath, segments: segments.length });
+}
+
+export async function mixAudio(input: MixInput, outputPath: string): Promise<void> {
+  const sfxList = input.soundEffects ?? [];
+
+  log.info('Mixing audio tracks', {
+    hasMusic: !!input.music,
+    sfxCount: sfxList.length,
+  });
+
+  if (!input.music && sfxList.length === 0) {
+    const { copy } = await import('fs-extra');
+    await copy(input.narration, outputPath);
+    return;
+  }
+
+  const narrationVol = Math.max(0, input.narrationVolume ?? 1.0);
+  const musicVol = Math.max(0, input.musicVolume ?? 0.25);
+  const fadeIn = Math.max(0, input.musicFadeIn ?? 0);
+  const fadeOut = Math.max(0, input.musicFadeOut ?? 0);
+  const totalDuration = input.totalDuration;
+
+  // Build FFmpeg complex filter graph:
+  //   Input 0: narration
+  //   Input 1: music (if present)
+  //   Input 2..N: sound effects (each with adelay positioning)
+  //   All mixed via amix
+
+  const filterParts: string[] = [];
+  const inputLabels: string[] = [];
+  let inputCount = 1; // narration is always input 0
+
+  // Narration: volume adjust + normalize sample rate
+  filterParts.push(`[0:a]aresample=44100,volume=${narrationVol}[narr]`);
+  inputLabels.push('[narr]');
+
+  // Music: volume, loop, fade
+  let hasMusic = false;
+  if (input.music) {
+    hasMusic = true;
+    inputCount++;
+    let musicFilter = `[1:a]aresample=44100,volume=${musicVol},aloop=-1:size=0`;
+    if (fadeIn > 0) {
+      musicFilter += `,afade=t=in:st=0:d=${fadeIn}`;
+    }
+    if (fadeOut > 0 && totalDuration) {
+      const effectiveFade = Math.min(fadeOut, totalDuration);
+      const fadeStart = Math.max(0, totalDuration - effectiveFade);
+      musicFilter += `,afade=t=out:st=${fadeStart}:d=${effectiveFade}`;
+    }
+    musicFilter += '[music]';
+    filterParts.push(musicFilter);
+    inputLabels.push('[music]');
+  }
+
+  // Sound effects: each gets adelay for precise timestamp positioning
+  for (let i = 0; i < sfxList.length; i++) {
+    const sfx = sfxList[i];
+    const inputIdx = hasMusic ? i + 2 : i + 1;
+    inputCount++;
+    const delayMs = Math.max(0, Math.round(sfx.timestampMs));
+    const sfxVol = Math.max(0, sfx.volume);
+    filterParts.push(
+      `[${inputIdx}:a]aresample=44100,volume=${sfxVol},adelay=${delayMs}|${delayMs}[sfx${i}]`,
+    );
+    inputLabels.push(`[sfx${i}]`);
+  }
+
+  // Mix all tracks: amix divides amplitude by input count, so we weight
+  // narration much higher to keep it dominant over music/SFX.
+  const mixLabel = inputLabels.join('');
+  const weightValues: number[] = [];
+  weightValues.push(3); // narration — dominant
+  if (hasMusic) weightValues.push(1); // music — background
+  for (let i = 0; i < sfxList.length; i++) weightValues.push(1); // SFX — accent
+  const weights = weightValues.join(' ');
+  filterParts.push(
+    `${mixLabel}amix=inputs=${inputLabels.length}:duration=first:dropout_transition=3:weights=${weights},dynaudnorm=p=0.71:s=5[out]`,
+  );
+
+  // Build command
+  let command = getFFmpegCommand(input.narration);
+
+  if (input.music) {
+    command = command.input(input.music);
+  }
+
+  for (const sfx of sfxList) {
+    command = command.input(sfx.path);
+  }
+
+  command = command
+    .complexFilter(filterParts)
+    .outputOptions(['-map', '[out]'])
+    .audioCodec('libmp3lame')
+    .audioBitrate('192k')
+    .output(outputPath);
+
+  await runFFmpeg(command);
+  log.info('Audio mixed', { output: outputPath, tracks: inputLabels.length });
+}
