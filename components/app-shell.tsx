@@ -27,7 +27,7 @@ export function AppShell({ activeNav, children }: AppShellProps) {
         <Link
           href="/"
           className="mt-5 flex h-10 w-10 items-center justify-center rounded-2xl bg-[color:var(--paper-soft)] shadow-[0_8px_24px_rgba(15,23,42,0.06)]"
-          aria-label="ClawVid 首页"
+          aria-label="Linglu Video 首页"
         >
           <SparkLogoIcon className="h-6 w-6" />
         </Link>
@@ -61,7 +61,7 @@ export function AppShell({ activeNav, children }: AppShellProps) {
           <Link href="/" className="flex items-center gap-2">
             <SparkLogoIcon className="h-8 w-8" />
             <span className="text-sm font-semibold text-[color:var(--ink-900)]">
-              ClawVid
+              Linglu Video
             </span>
           </Link>
           <div className="flex items-center gap-2">

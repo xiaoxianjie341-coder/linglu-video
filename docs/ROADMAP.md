@@ -1,4 +1,4 @@
-# ClawVid Roadmap to Production-Ready
+# Linglu Video Roadmap to Production-Ready
 
 Status: **End-to-end pipeline working. TTS-driven timing, voice consistency, subtitle sync, 2K images, advanced prompts. Multi-model video support (Vidu Q3, PixVerse transitions, Kling). 103 tests passing. Phases 10-15 define the full autonomous agent vision.**
 
@@ -312,7 +312,7 @@ Multiple successful end-to-end runs completed.
 
 ## Phase 9: Prompt Quality and Workflow Generation Rules — PARTIALLY COMPLETE
 
-The quality of generated videos depends heavily on the prompts in the workflow JSON. This phase focuses on improving the rules and guidelines that govern how the OpenClaw agent (or users) write workflow JSONs, image prompts, and video prompts.
+The quality of generated videos depends heavily on the prompts in the workflow JSON. This phase focuses on improving the rules and guidelines that govern how the Linglu agent (or users) write workflow JSONs, image prompts, and video prompts.
 
 **Completed:** 4-component prompt structure (shot/subject/motion/style), depth layering (foreground/mid/background), named lighting sources, camera/lens references, texture terms, micro-motion directives for video. Added `cfg_scale` support for Kling 2.6 Pro, `resolution: "2K"` for nano-banana-pro consistency. Production horror workflow fully rewritten with advanced prompts — 51s video at $4.40. **Multi-model video support:** Vidu Q3 for animated content, PixVerse v5.6 for scene transitions, Kling 2.6 Pro for photorealistic. Scene transition interpolation via `generateTransition()`. Video model investigation complete with pricing/capability matrix.
 
@@ -550,12 +550,12 @@ Fully automated publishing to social media platforms. The agent generates the vi
 
 ## Phase 15: Agent Orchestration & Full Automation — NOT STARTED
 
-ClawVid becomes a fully autonomous video production system driven by AI agents. Not designed for manual human use — the AI agent is the primary operator.
+Linglu Video becomes a fully autonomous video production system driven by AI agents. Not designed for manual human use — the AI agent is the primary operator.
 
 ### 15.1 Agent-first API
 
-- [ ] Programmatic API: `clawvid.generate({ topic, style, duration, platform })` — one call, full pipeline
-- [ ] MCP (Model Context Protocol) server: expose ClawVid as tools for Claude/other agents
+- [ ] Programmatic API: `lingluVideo.generate({ topic, style, duration, platform })` — one call, full pipeline
+- [ ] MCP (Model Context Protocol) server: expose Linglu Video as tools for Claude/other agents
 - [ ] OpenAI function-calling compatible tool definitions
 - [ ] Webhook callbacks: notify agent when generation/publishing completes
 - [ ] Batch mode: queue multiple video generations, process in parallel

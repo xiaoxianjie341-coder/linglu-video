@@ -17,7 +17,7 @@ describe("Storage: web MVP", () => {
   let tempDir: string;
 
   beforeEach(async () => {
-    tempDir = await mkdtemp(join(tmpdir(), "clawvid-web-"));
+    tempDir = await mkdtemp(join(tmpdir(), "linglu-video-web-"));
   });
 
   afterEach(async () => {

@@ -42,7 +42,7 @@ export function ensureInitialized(): void {
     if (key) {
       initialized = true;
     } else {
-      throw new Error('FAL_KEY not set. Run `clawvid setup` or set FAL_KEY in .env');
+      throw new Error('FAL_KEY not set. Run `linglu-video setup` or set FAL_KEY in .env');
     }
   }
 }

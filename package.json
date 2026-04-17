@@ -1,11 +1,11 @@
 {
-  "name": "clawvid",
+  "name": "linglu-video",
   "version": "0.1.0",
-  "description": "AI-powered short-form video generation skill for OpenClaw",
+  "description": "AI-powered short-form video generation module for Linglu",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "clawvid": "./dist/index.js"
+    "linglu-video": "./dist/index.js"
   },
   "scripts": {
     "build": "tsc -p tsconfig.cli.json",
@@ -21,7 +21,7 @@
     "web:start": "next start"
   },
   "keywords": [
-    "openclaw",
+    "linglu",
     "video",
     "shorts",
     "tiktok",

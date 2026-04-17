@@ -1,8 +1,8 @@
-# ClawVid
+# Linglu Video
 
 Generate short-form videos (YouTube Shorts, TikTok, Reels) from text prompts.
 
-You are the orchestrator. You plan scenes, write prompts, generate a workflow JSON, and call `clawvid generate` to execute the full pipeline.
+You are the orchestrator. You plan scenes, write prompts, generate a workflow JSON, and call `linglu-video generate` to execute the full pipeline.
 
 ---
 
@@ -122,8 +122,8 @@ Use `type: "static"` when you want to **display an existing image** without AI g
 #### How Transitions Work
 
 When a scene has a `transition` object:
-1. ClawVid takes the **previous scene's image** as the start frame
-2. ClawVid takes the **current scene's image** as the end frame
+1. Linglu Video takes the **previous scene's image** as the start frame
+2. Linglu Video takes the **current scene's image** as the end frame
 3. The video model generates a **smooth morph/transition** between them
 4. Result: Seamless flow like ComfyUI/professional editing
 
@@ -325,9 +325,9 @@ Add `video_settings` to your workflow:
 
 ### Process Management Rules
 
-**DO NOT set timeouts on clawvid commands.** The pipeline runs many sequential API calls and will complete on its own.
+**DO NOT set timeouts on linglu-video commands.** The pipeline runs many sequential API calls and will complete on its own.
 
-When running `clawvid generate`:
+When running `linglu-video generate`:
 1. Start the process **without a timeout** (or use a very long one like 3600s)
 2. Use `process poll` to check status periodically
 3. Report progress to the user as phases complete
@@ -337,10 +337,10 @@ When running `clawvid generate`:
 **Example execution:**
 ```bash
 # CORRECT - no timeout, let it run
-clawvid generate --workflow workflow.json
+linglu-video generate --workflow workflow.json
 
 # WRONG - timeout will kill the process mid-generation
-# timeout 600 clawvid generate --workflow workflow.json
+# timeout 600 linglu-video generate --workflow workflow.json
 ```
 
 ### Cost Expectations
@@ -359,8 +359,8 @@ Premium video models (Kling 2.6 Pro, Vidu Q3) and transitions cost more but prod
 ## How It Works
 
 1. You create a **workflow JSON** file describing every scene, prompt, model, timing, transitions, sound effects, and music.
-2. You call `clawvid generate --workflow workflow.json` to execute it.
-3. ClawVid handles all fal.ai API calls, audio processing, sound effect generation, music generation, Remotion rendering, and FFmpeg post-production.
+2. You call `linglu-video generate --workflow workflow.json` to execute it.
+3. Linglu Video handles all fal.ai API calls, audio processing, sound effect generation, music generation, Remotion rendering, and FFmpeg post-production.
 4. Output: finished videos in `output/{date}-{slug}/` for each platform.
 
 You control everything through the workflow JSON and `config.json`. No code changes needed.
@@ -369,7 +369,7 @@ You control everything through the workflow JSON and `config.json`. No code chan
 
 ## Initial Setup (First-Time Users)
 
-When a user first invokes ClawVid or has no `preferences.json`, run this setup flow.
+When a user first invokes Linglu Video or has no `preferences.json`, run this setup flow.
 
 ### Step 1: Platform Selection
 
@@ -491,7 +491,7 @@ After setup, save to `preferences.json` (gitignored):
 }
 ```
 
-Or run: `clawvid setup` (interactive) / `clawvid setup --reset` (start over).
+Or run: `linglu-video setup` (interactive) / `linglu-video setup --reset` (start over).
 
 ---
 
@@ -961,39 +961,39 @@ Is this the first scene?
 
 ```bash
 # Generate video from workflow JSON (full pipeline)
-clawvid generate --workflow workflow.json
-clawvid generate --workflow workflow.json --quality max_quality
-clawvid generate --workflow workflow.json --template horror --skip-cache
+linglu-video generate --workflow workflow.json
+linglu-video generate --workflow workflow.json --quality max_quality
+linglu-video generate --workflow workflow.json --template horror --skip-cache
 
 # PHASED GENERATION - Generate in stages with review
-clawvid generate --workflow workflow.json --phase images      # Images only, pause for review
-clawvid generate --workflow workflow.json --phase videos      # Videos only (uses existing images)
-clawvid generate --workflow workflow.json --phase audio       # Audio only
-clawvid generate --workflow workflow.json --phase render      # Render only
+linglu-video generate --workflow workflow.json --phase images      # Images only, pause for review
+linglu-video generate --workflow workflow.json --phase videos      # Videos only (uses existing images)
+linglu-video generate --workflow workflow.json --phase audio       # Audio only
+linglu-video generate --workflow workflow.json --phase render      # Render only
 
 # VISION QA - Check images for issues before continuing
-clawvid generate --workflow workflow.json --qa                # Enable QA checks
-clawvid generate --workflow workflow.json --qa-auto-fix       # Auto-regenerate failed images
+linglu-video generate --workflow workflow.json --qa                # Enable QA checks
+linglu-video generate --workflow workflow.json --qa-auto-fix       # Auto-regenerate failed images
 
 # SELECTIVE REGENERATION - Fix specific scenes
-clawvid generate --workflow workflow.json --regenerate scene_5,scene_6
-clawvid generate --workflow workflow.json --use-existing-images --regenerate scene_3
+linglu-video generate --workflow workflow.json --regenerate scene_5,scene_6
+linglu-video generate --workflow workflow.json --use-existing-images --regenerate scene_3
 
 # Re-render from a previous run's assets
-clawvid render --run output/2026-02-11-haunted-library/
-clawvid render --run output/2026-02-11-haunted-library/ --all-platforms
-clawvid render --run output/2026-02-11-haunted-library/ --platform tiktok
+linglu-video render --run output/2026-02-11-haunted-library/
+linglu-video render --run output/2026-02-11-haunted-library/ --all-platforms
+linglu-video render --run output/2026-02-11-haunted-library/ --platform tiktok
 
 # Preview workflow in Remotion
-clawvid preview --workflow workflow.json
-clawvid preview --workflow workflow.json --platform youtube
+linglu-video preview --workflow workflow.json
+linglu-video preview --workflow workflow.json --platform youtube
 
 # Launch Remotion studio for visual editing
-clawvid studio
+linglu-video studio
 
 # Configure preferences
-clawvid setup
-clawvid setup --reset
+linglu-video setup
+linglu-video setup --reset
 ```
 
 ### Pipeline Flow (what `generate` does)
@@ -1060,7 +1060,7 @@ Templates apply color grading, overlays, and default effects.
 
 ## 🔍 Vision QA: Detecting Image Issues
 
-ClawVid includes Vision QA to automatically detect common issues in AI-generated images.
+Linglu Video includes Vision QA to automatically detect common issues in AI-generated images.
 
 ### What Vision QA Checks For
 
@@ -1092,10 +1092,10 @@ Image models often hallucinate text/logos when prompted with certain terms:
 
 ```bash
 # Check images after generation
-clawvid generate --workflow x.json --qa
+linglu-video generate --workflow x.json --qa
 
 # Auto-fix by regenerating with sanitized prompts
-clawvid generate --workflow x.json --qa-auto-fix
+linglu-video generate --workflow x.json --qa-auto-fix
 ```
 
 ### Preventing Issues in Prompts
@@ -1111,14 +1111,14 @@ For critical projects, generate images first and review:
 
 ```bash
 # Step 1: Generate images only
-clawvid generate --workflow x.json --phase images
+linglu-video generate --workflow x.json --phase images
 
 # Step 2: Review images in output folder
 # Step 3: Fix problematic scenes
-clawvid generate --workflow x.json --regenerate scene_5,scene_6
+linglu-video generate --workflow x.json --regenerate scene_5,scene_6
 
 # Step 4: Continue with videos
-clawvid generate --workflow x.json --phase videos --use-existing-images
+linglu-video generate --workflow x.json --phase videos --use-existing-images
 ```
 
 ### Skip QA for Specific Scenes
@@ -1219,7 +1219,7 @@ Add `skip_qa: true` to scenes that should bypass checking:
 6. GET APPROVAL — Wait for explicit "go"
 7. WARN ABOUT TIME — "This will take 20-30 minutes. Ready?"
 8. GENERATE WORKFLOW — Create the workflow JSON (following ALL rules above)
-9. EXECUTE — Run clawvid generate --workflow <file> (NO TIMEOUT!)
+9. EXECUTE — Run linglu-video generate --workflow <file> (NO TIMEOUT!)
 10. MONITOR — Poll process and report progress
 11. REVIEW — Check outputs
 12. DELIVER — Compress, send video to chat, show cost summary

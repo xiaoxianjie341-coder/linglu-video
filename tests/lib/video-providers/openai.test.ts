@@ -61,7 +61,7 @@ describe("OpenAI video provider", () => {
   let outputPath: string;
 
   beforeEach(async () => {
-    tempDir = await mkdtemp(join(tmpdir(), "clawvid-openai-video-"));
+    tempDir = await mkdtemp(join(tmpdir(), "linglu-video-openai-video-"));
     referencePath = join(tempDir, "reference.png");
     outputPath = join(tempDir, "output.mp4");
     await writeFile(referencePath, Buffer.from("reference"));

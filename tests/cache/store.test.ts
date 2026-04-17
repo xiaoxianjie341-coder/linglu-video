@@ -10,7 +10,7 @@ describe('Cache: store', () => {
   let cache: CacheStore;
 
   beforeEach(async () => {
-    tempDir = await mkdtemp(join(tmpdir(), 'clawvid-test-'));
+    tempDir = await mkdtemp(join(tmpdir(), 'linglu-video-test-'));
     cache = new CacheStore(tempDir);
   });
 

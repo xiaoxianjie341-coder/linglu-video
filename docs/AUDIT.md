@@ -1,4 +1,4 @@
-# ClawVid Code Audit Report
+# Linglu Video Code Audit Report
 
 **Date**: 2026-02-11
 **Commit**: `aa3a563` (post first round of fixes)

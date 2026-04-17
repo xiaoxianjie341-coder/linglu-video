@@ -1,18 +1,18 @@
 <p align="center">
-  <img src="logo.png" alt="ClawVid Logo" width="200">
+  <img src="logo.png" alt="Linglu Video Logo" width="200">
 </p>
 
-# ClawVid
+# Linglu Video
 
 > **Status: Beta** — End-to-end pipeline working. TTS-driven timing (narration drives scene duration), voice consistency (voice cloning across scenes), subtitle sync, aspect-ratio-safe encoding, Kling 2.6 video, Remotion rendering, word-level subtitles, and multi-track audio. 97 tests passing. Edge cases and hardening still in progress.
 
-AI-powered short-form video generation CLI for [OpenClaw](https://github.com/neur0map/openclaw).
+AI-powered short-form video generation module for Linglu.
 
-Generate YouTube Shorts, TikToks, and Instagram Reels from text prompts. The OpenClaw agent orchestrates the entire pipeline — planning scenes, writing prompts, and generating a workflow JSON that ClawVid executes end-to-end.
+Generate YouTube Shorts, TikToks, and Instagram Reels from text prompts. The Linglu agent orchestrates the entire pipeline — planning scenes, writing prompts, and generating a workflow JSON that Linglu Video executes end-to-end.
 
-## OpenAI Web MVP
+## Linglu Video Web MVP
 
-This repo now also includes a local **OpenAI-first Web MVP** built with Next.js.
+This repo now also includes a local **Linglu Video Web MVP** built with Next.js and powered by OpenAI models.
 
 The MVP flow is:
 
@@ -60,16 +60,16 @@ Local settings are stored in `data/settings.json`. Treat that file as secret loc
 User: "Make a horror video about a haunted library"
                     |
                     v
-    OpenClaw Agent (reads SKILL.md)
+    Linglu Agent (reads SKILL.md)
       - Asks clarifying questions
       - Plans scenes with timing
       - Writes image/video prompts
       - Plans sound effects + music
       - Creates workflow.json
-      - Runs: clawvid generate --workflow workflow.json
+      - Runs: linglu-video generate --workflow workflow.json
                     |
                     v
-    ClawVid Pipeline (TTS-first, 6 phases)
+    Linglu Video Pipeline (TTS-first, 6 phases)
       Phase 1. Generate TTS narration (qwen-3-tts, voice cloning for consistency)
       Phase 2. Compute timing (scene durations derived from actual TTS length)
       Phase 3. Generate images via fal.ai (kling-image/v3 or nano-banana-pro)
@@ -100,8 +100,8 @@ All AI generation flows through **fal.ai** — one API, one key.
 ## Installation
 
 ```bash
-git clone https://github.com/neur0map/clawvid
-cd clawvid
+git clone https://github.com/xiaoxianjie341-coder/linglu-video
+cd linglu-video
 npm install
 cp .env.example .env
 # Edit .env and add your FAL_KEY
@@ -112,7 +112,7 @@ cp .env.example .env
 ```bash
 npm run build
 npm link
-# Now "clawvid" is available globally
+# Now "linglu-video" is available globally
 ```
 
 ### Development mode
@@ -149,32 +149,32 @@ Central settings file checked into git. Controls:
 
 ### preferences.json
 
-Per-user defaults created by `clawvid setup`. Gitignored. Stores platform selection, default template, quality mode, voice, and visual style.
+Per-user defaults created by `linglu-video setup`. Gitignored. Stores platform selection, default template, quality mode, voice, and visual style.
 
 ## CLI Commands
 
 ```bash
 # Full pipeline: generate assets + render video
-clawvid generate --workflow <path>          # Required: workflow JSON
-                 --template <name>          # Override template
-                 --quality <mode>           # max_quality | balanced | budget
-                 --skip-cache               # Regenerate all assets
+linglu-video generate --workflow <path>     # Required: workflow JSON
+                    --template <name>       # Override template
+                    --quality <mode>        # max_quality | balanced | budget
+                    --skip-cache            # Regenerate all assets
 
 # Re-render from existing assets
-clawvid render --run <path>                 # Required: output run directory
-               --platform <name>            # youtube | tiktok | instagram_reels
-               --all-platforms              # Render all platforms
+linglu-video render --run <path>            # Required: output run directory
+                  --platform <name>         # youtube | tiktok | instagram_reels
+                  --all-platforms           # Render all platforms
 
 # Preview in Remotion
-clawvid preview --workflow <path>           # Required: workflow JSON
-                --platform <name>           # Preview as platform (default: tiktok)
+linglu-video preview --workflow <path>      # Required: workflow JSON
+                   --platform <name>        # Preview as platform (default: tiktok)
 
 # Remotion visual editor
-clawvid studio
+linglu-video studio
 
 # User preferences
-clawvid setup                               # Interactive setup
-clawvid setup --reset                       # Reset to defaults
+linglu-video setup                          # Interactive setup
+linglu-video setup --reset                  # Reset to defaults
 ```
 
 ## Workflow JSON
@@ -259,7 +259,7 @@ Full examples:
 ## Project Structure
 
 ```
-clawvid/
+linglu-video/
   SKILL.md                       # Agent instructions (the brain)
   config.json                    # All tuneable settings
   preferences.json               # Per-user defaults (gitignored)
@@ -275,11 +275,11 @@ clawvid/
     index.ts                     # CLI entry point
     cli/                         # Command definitions
       program.ts                 #   Commander setup (5 commands)
-      generate.ts                #   clawvid generate
-      render.ts                  #   clawvid render
-      preview.ts                 #   clawvid preview
-      studio.ts                  #   clawvid studio
-      setup.ts                   #   clawvid setup
+      generate.ts                #   linglu-video generate
+      render.ts                  #   linglu-video render
+      preview.ts                 #   linglu-video preview
+      studio.ts                  #   linglu-video studio
+      setup.ts                   #   linglu-video setup
 
     core/                        # Pipeline orchestration
       pipeline.ts                #   Main pipeline (generate/render/preview/studio/setup)

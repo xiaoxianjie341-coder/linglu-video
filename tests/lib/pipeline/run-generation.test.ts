@@ -50,7 +50,7 @@ describe("runGeneration", () => {
   let tempDir: string;
 
   beforeEach(async () => {
-    tempDir = await mkdtemp(join(tmpdir(), "clawvid-run-generation-"));
+    tempDir = await mkdtemp(join(tmpdir(), "linglu-video-run-generation-"));
     vi.clearAllMocks();
     vi.spyOn(console, "warn").mockImplementation(() => undefined);
   });

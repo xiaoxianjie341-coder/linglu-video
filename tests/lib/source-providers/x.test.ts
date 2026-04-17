@@ -32,7 +32,7 @@ OpenAI shipped a new model.
 `);
 
     const result = await fetchXSource("https://x.com/openai/status/123", {
-      scriptPath: "/Users/demo/x-to-markdown/main.ts",
+      scriptPath: "/mock/tools/x-to-markdown/main.ts",
       runCommand,
       readFile,
     });
@@ -40,7 +40,7 @@ OpenAI shipped a new model.
     expect(runCommand).toHaveBeenCalledWith("npx", [
       "-y",
       "bun",
-      "/Users/demo/x-to-markdown/main.ts",
+      "/mock/tools/x-to-markdown/main.ts",
       "https://x.com/openai/status/123",
       "--json",
     ]);

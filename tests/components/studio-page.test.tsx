@@ -139,7 +139,7 @@ describe("StudioPage", () => {
               provider: "openai",
               model: "sora-2",
               seconds: 8,
-              path: "/Users/xiaoxianjie/888/data/runs/run_123/video/final.mp4",
+              path: "/mock/data/runs/run_123/video/final.mp4",
             },
             error: null,
           },

@@ -1,6 +1,6 @@
 {
-  "name": "clawvid-scenes",
-  "title": "ClawVid Scene Generator",
+  "name": "linglu-video-scenes",
+  "title": "Linglu Video Scene Generator",
   "contents": {
     "name": "workflow",
     "nodes": {
@@ -247,7 +247,7 @@
       "input": {
         "position": { "x": -200, "y": 0 }
       },
-      "description": "Generates up to 6 scene images with visual consistency. Uses a shared seed and reference image editing to maintain character/style coherence across all scenes. Upload to fal.ai, then call via: fal.stream('workflows/<user>/clawvid-scenes', { input })"
+      "description": "Generates up to 6 scene images with visual consistency. Uses a shared seed and reference image editing to maintain character/style coherence across all scenes. Upload to fal.ai, then call via: fal.stream('workflows/<user>/linglu-video-scenes', { input })"
     }
   }
 }

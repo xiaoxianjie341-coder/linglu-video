@@ -6,8 +6,8 @@ import { registerStudio } from './studio.js';
 import { registerSetup } from './setup.js';
 
 export const program = new Command()
-  .name('clawvid')
-  .description('AI-powered short-form video generation')
+  .name('linglu-video')
+  .description('AI-powered short-form video generation for Linglu')
   .version('0.1.0');
 
 registerGenerate(program);
