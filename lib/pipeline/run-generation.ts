@@ -1,35 +1,170 @@
-import type { GenerationRequest, RunRecord, Shot } from "../schemas";
-import { fetchSourceContent } from "../fetch-source";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 import {
-  getRun,
+  plannerOutputSchema,
+  type GenerationRequest,
+  type PlannerOutput,
+  type StoryboardAsset,
+  type VideoAsset,
+} from "../schemas";
+import {
+  runStoryboardPipeline,
+  type ResolvedPlan,
+  type StoryboardGenerationMode,
+  type StoryboardPipelineResult,
+} from "../storyboard-pipeline";
+import { isRetryableOpenAIError } from "../openai/retry";
+import {
+  getRunsDir,
   updateRun,
   writePlannerArtifact,
+  writeStoryboardArtifact,
+  writeVideoArtifact,
 } from "../storage";
-import { generateStoryboards } from "../openai/image";
-import { planShots } from "../openai/planner";
-import { generateVideoFromStoryboard } from "../openai/video";
 
-function buildVideoPrompt(run: RunRecord): string {
-  if (!run.planner) {
-    return run.request.sourceInput;
+const GENERATION_CHAIN_ATTEMPTS = 2;
+const GENERATION_CHAIN_RETRY_DELAY_MS = 1_500;
+
+async function readJsonFile<T>(path: string): Promise<T> {
+  return JSON.parse(await readFile(path, "utf8")) as T;
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
   }
 
-  const beatSummary = run.planner.shots
-    .map(
-      (shot: Shot, index: number) =>
-        `Beat ${index + 1}: ${shot.video_prompt}`,
-    )
-    .join(" ");
+  return String(error);
+}
 
+function buildGuardrailsText(plan: ResolvedPlan): string {
   return [
-    run.planner.content_summary,
-    `Brand tone: ${run.brandTone || run.planner.brand_tone || "cinematic"}.`,
-    `Visual style: ${run.planner.visual_style || "cohesive short-form social video"}.`,
-    run.planner.overall_prompt_guardrails,
-    beatSummary,
-  ]
-    .filter(Boolean)
-    .join(" ");
+    ...plan.frozen_world.anchors.map((anchor) => `Anchor: ${anchor}`),
+    ...plan.frozen_world.negative_constraints.map(
+      (constraint) => `Forbid: ${constraint}`,
+    ),
+  ].join(" | ");
+}
+
+function buildPlanner(plan: ResolvedPlan): PlannerOutput {
+  return plannerOutputSchema.parse({
+    title: plan.title,
+    content_summary: plan.content_summary,
+    brand_tone: plan.brand_tone,
+    visual_style: plan.visual_style,
+    overall_prompt_guardrails: buildGuardrailsText(plan),
+    storyboard_grid_prompt: plan.storyboard_grid_prompt,
+    frozen_world: plan.frozen_world,
+    shots: plan.shots.map((shot) => ({
+      id: shot.id,
+      goal: shot.goal,
+      narrative_beat: shot.narrative_beat,
+      image_prompt: shot.frame_description,
+      video_prompt: shot.video_prompt,
+      camera: shot.camera,
+      grid_index: shot.grid_index,
+      frame_description: shot.frame_description,
+      motion_extension: shot.motion_extension,
+      qa_focus: shot.qa_focus,
+      duration_seconds: shot.duration_seconds,
+    })),
+  });
+}
+
+function buildMasterBoardVideoPrompt(
+  plan: ResolvedPlan,
+  selectedShotIds: string[],
+): string {
+  return selectedShotIds.length === plan.shots.length
+    ? "基于整张 3x3 总分镜，一次性生成完整视频。"
+    : `基于整张 3x3 总分镜，一次性生成前 ${selectedShotIds.length} 格对应的视频。`;
+}
+
+function buildGridMasterStoryboard(
+  plan: ResolvedPlan,
+  gridPath: string,
+  selectedShotIds: string[],
+  clipPath?: string,
+): StoryboardAsset {
+  return {
+    shotId: "grid_master",
+    kind: "grid",
+    aspect: "landscape",
+    imagePrompt: plan.storyboard_grid_prompt,
+    videoPrompt: buildMasterBoardVideoPrompt(plan, selectedShotIds),
+    path: gridPath,
+    clipPath,
+  };
+}
+
+function buildStoryboardAssets(
+  plan: ResolvedPlan,
+  result: StoryboardPipelineResult,
+  mode: StoryboardGenerationMode,
+): StoryboardAsset[] {
+  const masterBoard =
+    mode === "grid_preview"
+      ? buildGridMasterStoryboard(
+          plan,
+          result.gridPath,
+          result.selectedShots,
+          result.finalVideo?.path,
+        )
+      : {
+          ...buildGridMasterStoryboard(plan, result.gridPath, result.selectedShots),
+          videoPrompt: buildGuardrailsText(plan),
+        };
+
+  if (mode === "grid_preview") {
+    return [masterBoard];
+  }
+
+  const runRoot = result.outputDir;
+  const shotArtifacts = result.shots;
+  const artifactByShotId = new Map(
+    shotArtifacts.map((artifact) => [artifact.shotId, artifact]),
+  );
+
+  const panelBoards = plan.shots.map((shot) => {
+    const artifact = artifactByShotId.get(shot.id);
+    const latestQa = artifact?.attempts
+      ?.map((attempt) => attempt.qa)
+      .filter(Boolean)
+      .at(-1);
+
+    return {
+      shotId: shot.id,
+      kind: "panel" as const,
+      aspect: "landscape" as const,
+      gridIndex: shot.grid_index,
+      imagePrompt: shot.frame_description,
+      videoPrompt: shot.video_prompt,
+      path: join(runRoot, "storyboard", "crops", `${shot.id}.png`),
+      clipPath: artifact?.acceptedVideoPath,
+      qaVerdict: latestQa?.verdict,
+      qaScore: latestQa?.score,
+    } satisfies StoryboardAsset;
+  });
+
+  return [masterBoard, ...panelBoards];
+}
+
+function buildFinalVideoAsset(
+  finalVideo: NonNullable<StoryboardPipelineResult["finalVideo"]>,
+): VideoAsset {
+  return {
+    provider: finalVideo.provider,
+    model: finalVideo.model,
+    seconds: finalVideo.seconds,
+    size: finalVideo.size,
+    path: finalVideo.path,
+    thumbnailPath: finalVideo.thumbnailPath,
+    jobId: finalVideo.jobId,
+  };
 }
 
 export async function runGeneration(
@@ -37,88 +172,123 @@ export async function runGeneration(
   request: GenerationRequest,
   baseDir?: string,
 ): Promise<void> {
+  let lastActivePhase: "planning" | "storyboarding" | "videoing" = "planning";
+
   try {
     await updateRun(
       runId,
       {
         status: "planning",
-        phaseLabel: "正在读取原始内容",
+        phaseLabel: "正在理解内容",
+        activePhase: "planning",
+        failedPhase: null,
         error: null,
+        planner: null,
+        storyboards: [],
+        video: null,
       },
       baseDir,
     );
+    const runRoot = join(getRunsDir(baseDir), runId);
+    let result: StoryboardPipelineResult | null = null;
+    let lastError: unknown;
 
-    const sourceContent = await fetchSourceContent(
-      request.sourceType,
-      request.sourceInput,
-    );
+    for (
+      let attempt = 1;
+      attempt <= GENERATION_CHAIN_ATTEMPTS;
+      attempt += 1
+    ) {
+      try {
+        result = await runStoryboardPipeline({
+          runId,
+          sourceType: request.sourceType,
+          sourceInput: request.sourceInput,
+          brandTone: request.brandTone,
+          videoProvider: request.videoProvider,
+          videoModel: request.videoModel,
+          clipSeconds: request.videoSeconds,
+          generationMode: "grid_preview",
+          maxRetries: 0,
+          skipQa: true,
+          outputDir: runRoot,
+          baseDir,
+          onPhase: async (status, phaseLabel) => {
+            lastActivePhase = status;
+            await updateRun(
+              runId,
+              {
+                status,
+                phaseLabel,
+                activePhase: status,
+              },
+              baseDir,
+            );
+          },
+          onPlanner: async (plan) => {
+            await writePlannerArtifact(runId, buildPlanner(plan), baseDir);
+          },
+          onStoryboard: async ({
+            plan,
+            gridPath,
+            selectedShotIds,
+          }) => {
+            await writeStoryboardArtifact(
+              runId,
+              buildGridMasterStoryboard(plan, gridPath, selectedShotIds),
+              baseDir,
+            );
+          },
+          onVideo: async (videoArtifact) => {
+            await writeVideoArtifact(
+              runId,
+              buildFinalVideoAsset(videoArtifact),
+              baseDir,
+            );
+          },
+        });
+        lastError = undefined;
+        break;
+      } catch (error) {
+        lastError = error;
 
-    await updateRun(
-      runId,
-      {
-        status: "planning",
-        phaseLabel: "正在生成导演拆解",
-      },
-      baseDir,
-    );
+        if (
+          attempt >= GENERATION_CHAIN_ATTEMPTS ||
+          !isRetryableOpenAIError(error)
+        ) {
+          throw error;
+        }
 
-    const planner = await planShots({
-      sourceContent,
-      brandTone: request.brandTone,
-      shotCount: request.shotCount,
-      baseDir,
-    });
-
-    await writePlannerArtifact(runId, planner, baseDir);
-
-    await updateRun(
-      runId,
-      {
-        status: "storyboarding",
-        phaseLabel: "正在生成分镜图",
-      },
-      baseDir,
-    );
-
-    const storyboards = await generateStoryboards({
-      runId,
-      planner,
-      baseDir,
-    });
-
-    if (storyboards.length === 0) {
-      throw new Error("没有成功生成任何分镜图。");
+        console.warn(
+          `[retry] 完整生成链路失败，准备整体重试 ${attempt}/${GENERATION_CHAIN_ATTEMPTS - 1}: ${getErrorMessage(error)}`,
+        );
+        await sleep(GENERATION_CHAIN_RETRY_DELAY_MS);
+      }
     }
 
-    await updateRun(
-      runId,
-      {
-        status: "videoing",
-        phaseLabel: "正在生成 Sora 视频",
-      },
-      baseDir,
-    );
-
-    const run = await getRun(runId, baseDir);
-
-    if (!run) {
-      throw new Error(`生成分镜后找不到任务记录：${runId}`);
+    if (!result) {
+      throw (lastError instanceof Error
+        ? lastError
+        : new Error(getErrorMessage(lastError)));
     }
 
-    await generateVideoFromStoryboard({
-      runId,
-      prompt: buildVideoPrompt(run),
-      storyboardPath: storyboards[0].path,
-      videoModel: request.videoModel,
-      videoSeconds: request.videoSeconds,
-      baseDir,
-    });
+    const plan = await readJsonFile<ResolvedPlan>(result.planPath);
+    const planner = buildPlanner(plan);
+    const storyboards = buildStoryboardAssets(plan, result, result.generationMode);
+    const video = result.finalVideo
+      ? buildFinalVideoAsset(result.finalVideo)
+      : null;
 
     await updateRun(
       runId,
       {
         status: "completed",
         phaseLabel: "生成完成",
+        activePhase: null,
+        failedPhase: null,
+        planner,
+        storyboards,
+        video,
+        error: null,
       },
       baseDir,
     );
@@ -128,6 +298,8 @@ export async function runGeneration(
       {
         status: "failed",
         phaseLabel: "生成失败",
+        activePhase: null,
+        failedPhase: lastActivePhase,
         error: error instanceof Error ? error.message : String(error),
       },
       baseDir,

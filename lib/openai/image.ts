@@ -4,15 +4,30 @@ import sharp from "sharp";
 import type { PlannerOutput, StoryboardAsset } from "../schemas";
 import { getRunsDir, writeStoryboardArtifact } from "../storage";
 import { getOpenAIClient } from "./client";
+import { withOpenAIReconnectRetry } from "./retry";
 
 const VIDEO_FRAME_WIDTH = 720;
 const VIDEO_FRAME_HEIGHT = 1280;
+const LANDSCAPE_VIDEO_FRAME_WIDTH = 1280;
+const LANDSCAPE_VIDEO_FRAME_HEIGHT = 720;
 
 export async function normalizeStoryboardImage(
   source: Buffer,
 ): Promise<Buffer> {
   return sharp(source)
     .resize(VIDEO_FRAME_WIDTH, VIDEO_FRAME_HEIGHT, {
+      fit: "cover",
+      position: "attention",
+    })
+    .png()
+    .toBuffer();
+}
+
+export async function normalizeLandscapeStoryboardImage(
+  source: Buffer,
+): Promise<Buffer> {
+  return sharp(source)
+    .resize(LANDSCAPE_VIDEO_FRAME_WIDTH, LANDSCAPE_VIDEO_FRAME_HEIGHT, {
       fit: "cover",
       position: "attention",
     })
@@ -31,18 +46,22 @@ export async function generateStoryboards({
   planner,
   baseDir,
 }: GenerateStoryboardsOptions): Promise<StoryboardAsset[]> {
-  const openai = await getOpenAIClient(baseDir);
   const storyboardDir = join(getRunsDir(baseDir), runId, "storyboards");
   await mkdir(storyboardDir, { recursive: true });
 
   const assets: StoryboardAsset[] = [];
 
   for (const shot of planner.shots) {
-    const image = await openai.images.generate({
-      model: "gpt-image-1.5",
-      prompt: shot.image_prompt,
-      size: "1024x1536",
-    });
+    const image = await withOpenAIReconnectRetry(
+      `生成分镜图 ${shot.id}`,
+      async () => getOpenAIClient(baseDir),
+      async (openai) =>
+        openai.images.generate({
+          model: "gpt-image-1.5",
+          prompt: shot.image_prompt,
+          size: "1024x1536",
+        }),
+    );
 
     const imageBase64 = image.data?.[0]?.b64_json;
 

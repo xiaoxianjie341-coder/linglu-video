@@ -30,10 +30,26 @@ npm run web:dev
 
 Open `http://localhost:3000`, go to `Settings`, and save your `OPENAI_API_KEY`.
 
+### Fastest local demo path
+
+If you're sharing this repo with a coding agent, the shortest path is:
+
+1. Clone the repo
+2. Run `npm install`
+3. Run `npm run web:dev`
+4. Open `http://localhost:3000`
+5. Save an `OPENAI_API_KEY` in `Settings`
+6. Paste text or a public URL and generate
+
+Local settings are stored in `data/settings.json`. Treat that file as secret local state and do not commit it.
+
 ### Web MVP caveats
 
-- URL fetching is best-effort only for public pages
-- X / Xiaohongshu pages may fail due to anti-bot protections; paste text manually if needed
+- URL fetching now uses domain-specific providers instead of raw HTML stripping
+- Generic article pages use `defuddle` for main-content extraction
+- X links use the local `baoyu-danger-x-to-markdown` skill script and may still require working cookies / local setup
+- Xiaohongshu links use the `xhs` CLI (`xhs read <url> --json`) and may still require a valid login/token
+- If any provider fails, paste the original text manually
 - Sora may reject human likeness / face-heavy references
 - All run history is stored locally in `data/runs/`
 - This MVP is local-only and does not include auth, DB, Docker, or provider switching yet

@@ -16,6 +16,7 @@ export function buildPlannerPrompt({
     "You are an expert short-form video director.",
     "Turn the source material into a compact storyboard plan for an 8-second social video prototype.",
     "Return valid JSON only. Do not use markdown fences. Do not add explanations outside the JSON.",
+    "IMPORTANT: You MUST write all the values in the JSON (except IDs) in Simplified Chinese (简体中文). The title, content_summary, narrative_beat, image_prompt, video_prompt, camera, and all other descriptive fields must be in Chinese.",
     `Create exactly ${shotCount} shots.`,
     "Each shot must include: id, goal, narrative_beat, image_prompt, video_prompt, camera, duration_seconds.",
     "Use vivid, production-ready prompts suitable for OpenAI image generation and Sora.",

@@ -185,12 +185,17 @@ describe('Core: pipeline', () => {
     await runGenerate({ workflow: '/tmp/workflow.json' });
 
     expect(executeWorkflow).toHaveBeenCalledTimes(1);
-    // Verify it was called with parsed workflow, config, assetManager, and skipCache
+    // Verify it was called with parsed workflow, config, assetManager, skipCache, and runtime options
     expect(executeWorkflow).toHaveBeenCalledWith(
       expect.objectContaining({ name: 'Test Video' }),
       expect.objectContaining({ defaults: expect.any(Object) }),
       expect.any(Object),
       undefined,
+      expect.objectContaining({
+        phase: 'all',
+        qaAutoFix: false,
+        regenerateSceneIds: [],
+      }),
     );
   });
 

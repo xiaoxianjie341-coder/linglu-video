@@ -6,9 +6,9 @@ interface ProgressPanelProps {
 
 const phases = [
   { id: "queued", label: "排队中" },
-  { id: "planning", label: "拆解脚本" },
-  { id: "storyboarding", label: "生成分镜图" },
-  { id: "videoing", label: "生成视频" },
+  { id: "planning", label: "理解内容 / 规划分镜" },
+  { id: "storyboarding", label: "生成 3x3 总分镜" },
+  { id: "videoing", label: "根据总分镜生成视频" },
   { id: "completed", label: "已完成" },
 ];
 

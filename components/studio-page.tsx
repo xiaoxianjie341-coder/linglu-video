@@ -1,159 +1,97 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { DirectorReport } from "./director-report";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { InputPanel } from "./input-panel";
-import { ProgressPanel } from "./progress-panel";
-import { StoryboardGrid } from "./storyboard-grid";
-import { VideoResult } from "./video-result";
-import type { GenerationRequest, RunRecord } from "../lib/schemas";
+import { HomeHero } from "./home-hero";
+import { RecentRunsStrip } from "./recent-runs-strip";
+import type { GenerationRequest, RunRecord, RuntimePreflight } from "../lib/schemas";
 
-export function StudioPage() {
+interface StudioPageProps {
+  initialRuns: RunRecord[];
+  preflight: RuntimePreflight;
+}
+
+export function StudioPage({ initialRuns, preflight }: StudioPageProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const searchRunId = searchParams.get("runId");
-
-  const [currentRunId, setCurrentRunId] = useState<string | null>(
-    searchRunId,
-  );
-  const [currentRun, setCurrentRun] = useState<RunRecord | null>(null);
+  const [runs, setRuns] = useState(initialRuns);
   const [requestError, setRequestError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (searchRunId && searchRunId !== currentRunId) {
-      setCurrentRunId(searchRunId);
-      setCurrentRun(null);
-    }
-  }, [currentRunId, searchRunId]);
-
-  useEffect(() => {
-    if (!currentRunId) {
-      return;
-    }
-
-    let cancelled = false;
-    let timeoutId: number | undefined;
-
-    async function poll() {
-      try {
-        const response = await fetch(`/api/runs/${currentRunId}`, {
-          cache: "no-store",
-        });
-
-        if (!response.ok) {
-          throw new Error("加载任务状态失败。");
-        }
-
-        const run = (await response.json()) as RunRecord;
-
-        if (cancelled) {
-          return;
-        }
-
-        setCurrentRun(run);
-        setRequestError(null);
-
-        if (run.status === "completed" || run.status === "failed") {
-          return;
-        }
-
-        timeoutId = window.setTimeout(poll, 3000);
-      } catch (error) {
-        if (!cancelled) {
-          setRequestError(
-            error instanceof Error ? error.message : String(error),
-          );
-        }
-      }
-    }
-
-    void poll();
-
-    return () => {
-      cancelled = true;
-      if (timeoutId) {
-        window.clearTimeout(timeoutId);
-      }
-    };
-  }, [currentRunId]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deletingRunId, setDeletingRunId] = useState<string | null>(null);
 
   async function handleGenerate(payload: GenerationRequest) {
     setRequestError(null);
-    setCurrentRun(null);
+    setIsSubmitting(true);
 
-    const response = await fetch("/api/generate", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
+    try {
+      const response = await fetch("/api/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
 
-    const data = await response.json();
+      const data = await response.json();
 
-    if (!response.ok) {
-      throw new Error(data.error || "启动生成任务失败。");
+      if (!response.ok) {
+        throw new Error(data.error || "启动生成任务失败。");
+      }
+
+      router.push(`/runs/${data.runId}`);
+    } catch (error) {
+      setRequestError(error instanceof Error ? error.message : String(error));
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setCurrentRunId(data.runId);
-    router.replace(`/?runId=${data.runId}`);
   }
 
-  const isGenerating =
-    Boolean(currentRunId) &&
-    (currentRun ? !["completed", "failed"].includes(currentRun.status) : true);
+  async function handleDeleteRun(runId: string) {
+    setRequestError(null);
+    setDeletingRunId(runId);
+
+    try {
+      const response = await fetch(`/api/runs/${runId}`, {
+        method: "DELETE",
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "删除失败，请稍后再试。");
+      }
+
+      setRuns((currentRuns) => currentRuns.filter((run) => run.id !== runId));
+    } catch (error) {
+      setRequestError(error instanceof Error ? error.message : String(error));
+    } finally {
+      setDeletingRunId(null);
+    }
+  }
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[460px_minmax(0,1fr)]">
-      <div className="xl:sticky xl:top-6 xl:self-start">
-        <InputPanel onSubmit={handleGenerate} isSubmitting={isGenerating} />
+    <div className="space-y-8">
+      <HomeHero preflight={preflight} />
+
+      {requestError ? (
+        <div className="mx-auto max-w-[920px] rounded-[24px] border border-[color:var(--danger)]/20 bg-[color:var(--danger-soft)] px-5 py-4 text-sm text-[color:var(--ink-900)]">
+          {requestError}
+        </div>
+      ) : null}
+
+      <div className="mx-auto max-w-[920px]">
+        <InputPanel
+          onSubmit={handleGenerate}
+          isSubmitting={isSubmitting}
+          preflight={preflight}
+        />
       </div>
 
-      <div className="space-y-6">
-        {requestError ? (
-          <div className="rounded-3xl border border-red-500/40 bg-red-500/10 px-5 py-4 text-sm text-red-100">
-            {requestError}
-          </div>
-        ) : null}
-
-        <ProgressPanel
-          status={currentRun?.status ?? (currentRunId ? "queued" : undefined)}
-          phaseLabel={
-            currentRun?.phaseLabel ??
-            (currentRunId ? "正在准备任务" : "等待新的任务")
-          }
-          error={currentRun?.error}
+      <div className="mx-auto max-w-[1180px]">
+        <RecentRunsStrip
+          runs={runs}
+          deletingRunId={deletingRunId}
+          onDelete={handleDeleteRun}
         />
-
-        {currentRun ? (
-          <div className="rounded-3xl border border-zinc-800 bg-zinc-900/80 px-5 py-4 text-sm text-zinc-300">
-            当前任务：
-            <span className="font-medium text-zinc-100">{currentRun.id}</span>
-          </div>
-        ) : null}
-
-        {currentRun?.planner ? (
-          <DirectorReport planner={currentRun.planner} />
-        ) : null}
-
-        {currentRun ? (
-          <StoryboardGrid
-            runId={currentRun.id}
-            storyboards={currentRun.storyboards}
-          />
-        ) : null}
-
-        {currentRun ? (
-          <VideoResult runId={currentRun.id} video={currentRun.video} />
-        ) : null}
-
-        {!currentRunId ? (
-          <section className="rounded-3xl border border-dashed border-zinc-800 bg-zinc-900/50 p-10 text-sm text-zinc-400">
-            从左侧输入区开始。提交后，这里会显示导演拆解报告、分镜图，以及最终的
-            Sora 视频片段。
-          </section>
-        ) : null}
       </div>
     </div>
   );

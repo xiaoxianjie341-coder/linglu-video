@@ -15,5 +15,6 @@ preview/
 *.log
 preferences.json
 tsconfig.tsbuildinfo
+data/settings.json
 data/runs/*
 !data/runs/.gitkeep

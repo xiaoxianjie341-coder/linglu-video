@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { nanoid } from "nanoid";
 import {
@@ -109,6 +109,8 @@ export async function createRun(
     updatedAt: now,
     status: "queued",
     phaseLabel: "Queued",
+    activePhase: null,
+    failedPhase: null,
     source: {
       type: request.sourceType,
       input: request.sourceInput,
@@ -175,6 +177,18 @@ export async function listRuns(baseDir?: string): Promise<RunRecord[]> {
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") {
       return [];
+    }
+    throw error;
+  }
+}
+
+export async function deleteRun(runId: string, baseDir?: string): Promise<boolean> {
+  try {
+    await rm(getRunDir(runId, baseDir), { recursive: true, force: false });
+    return true;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      return false;
     }
     throw error;
   }

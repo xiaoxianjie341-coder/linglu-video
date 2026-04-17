@@ -1,16 +1,17 @@
-import { Suspense } from "react";
+import { AppShell } from "../components/app-shell";
 import { StudioPage } from "../components/studio-page";
+import { loadRuntimePreflight } from "../lib/runtime-preflight";
+import { listRuns } from "../lib/storage";
 
-export default function Page() {
+export default async function Page() {
+  const [preflight, runs] = await Promise.all([
+    loadRuntimePreflight(),
+    listRuns(),
+  ]);
+
   return (
-    <Suspense
-      fallback={
-        <div className="rounded-3xl border border-zinc-800 bg-zinc-900/80 px-6 py-8 text-sm text-zinc-400">
-          正在加载工作台...
-        </div>
-      }
-    >
-      <StudioPage />
-    </Suspense>
+    <AppShell activeNav="create">
+      <StudioPage initialRuns={runs} preflight={preflight} />
+    </AppShell>
   );
 }

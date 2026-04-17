@@ -3,6 +3,7 @@ import { join } from "node:path";
 import type { RunStatus, VideoAsset } from "../schemas";
 import { getRunsDir, writeVideoArtifact } from "../storage";
 import { getOpenAIClient, getOpenAITransport } from "./client";
+import { withOpenAIReconnectRetry } from "./retry";
 
 type OpenAIVideoJob = {
   id?: string;
@@ -122,7 +123,6 @@ export async function generateVideoFromStoryboard({
   videoSeconds,
   baseDir,
 }: GenerateVideoOptions): Promise<VideoAsset> {
-  const openai = await getOpenAIClient(baseDir);
   const videoDir = join(getRunsDir(baseDir), runId, "video");
   await mkdir(videoDir, { recursive: true });
 
@@ -147,14 +147,22 @@ export async function generateVideoFromStoryboard({
 
   while (job.status === "queued" || job.status === "in_progress") {
     await sleep(10_000);
-    job = await openai.videos.retrieve(videoId);
+    job = await withOpenAIReconnectRetry(
+      "轮询视频任务状态",
+      async () => getOpenAIClient(baseDir),
+      async (openai) => openai.videos.retrieve(videoId),
+    );
   }
 
   if (job.status !== "completed") {
     throw new Error(job.error?.message || "视频生成失败。");
   }
 
-  const videoResponse = await openai.videos.downloadContent(videoId);
+  const videoResponse = await withOpenAIReconnectRetry(
+    "下载视频结果",
+    async () => getOpenAIClient(baseDir),
+    async (openai) => openai.videos.downloadContent(videoId),
+  );
   const videoBuffer = Buffer.from(await videoResponse.arrayBuffer());
   const videoPath = join(videoDir, "final.mp4");
   await writeFile(videoPath, videoBuffer);
@@ -162,9 +170,14 @@ export async function generateVideoFromStoryboard({
   let thumbnailPath: string | undefined;
 
   try {
-    const thumbnailResponse = await openai.videos.downloadContent(videoId, {
-      variant: "thumbnail",
-    });
+    const thumbnailResponse = await withOpenAIReconnectRetry(
+      "下载视频缩略图",
+      async () => getOpenAIClient(baseDir),
+      async (openai) =>
+        openai.videos.downloadContent(videoId, {
+          variant: "thumbnail",
+        }),
+    );
     const thumbnailBuffer = Buffer.from(await thumbnailResponse.arrayBuffer());
     thumbnailPath = join(videoDir, "thumbnail.webp");
     await writeFile(thumbnailPath, thumbnailBuffer);
@@ -173,6 +186,7 @@ export async function generateVideoFromStoryboard({
   }
 
   const asset: VideoAsset = {
+    provider: "openai",
     model: videoModel,
     seconds: Number(job.seconds ?? videoSeconds),
     path: videoPath,

@@ -1,6 +1,7 @@
 import { plannerOutputSchema, type PlannerOutput } from "../schemas";
 import { buildPlannerPrompt } from "../prompts";
-import { getPlannerClient } from "./client";
+import { getPlannerClient, getPlannerRuntime } from "./client";
+import { withOpenAIReconnectRetry } from "./retry";
 
 function stripCodeFences(value: string): string {
   return value.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
@@ -111,7 +112,7 @@ export async function planShots({
   shotCount,
   baseDir,
 }: PlanShotsOptions): Promise<PlannerOutput> {
-  const { client, runtime } = await getPlannerClient(baseDir);
+  const runtime = await getPlannerRuntime(baseDir);
   const plannerPrompt = buildPlannerPrompt({
     sourceContent,
     brandTone,
@@ -121,18 +122,28 @@ export async function planShots({
   const rawText =
     runtime.apiMode === "chat"
       ? extractPlannerTextFromChatCompletion(
-          await client.chat.completions.create({
-            model: runtime.model,
-            messages: [{ role: "user", content: plannerPrompt }],
-          }),
+          await withOpenAIReconnectRetry(
+            "分镜规划",
+            async () => getPlannerClient(baseDir),
+            async ({ client }) =>
+              client.chat.completions.create({
+                model: runtime.model,
+                messages: [{ role: "user", content: plannerPrompt }],
+              }),
+          ),
         )
       : (
-          await client.responses.create({
-            model: runtime.model,
-            input: plannerPrompt,
-            reasoning: { effort: "medium" },
-            text: { verbosity: "low" },
-          })
+          await withOpenAIReconnectRetry(
+            "分镜规划",
+            async () => getPlannerClient(baseDir),
+            async ({ client }) =>
+              client.responses.create({
+                model: runtime.model,
+                input: plannerPrompt,
+                reasoning: { effort: "medium" },
+                text: { verbosity: "low" },
+              }),
+          )
         ).output_text;
 
   const rawOutput = extractJson(rawText);
