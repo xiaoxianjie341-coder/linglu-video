@@ -1,19 +1,26 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import type { GenerationRequest, RuntimePreflight } from "../lib/schemas";
+import type {
+  GenerationMode,
+  GenerationRequest,
+  ImageAspect,
+  RuntimePreflight,
+} from "../lib/schemas";
 import {
   getDefaultVideoModel,
   normalizeVideoSelection,
   VIDEO_MODEL_OPTIONS,
   type VideoProviderId,
 } from "../lib/video-providers/catalog";
+import { DEFAULT_IMAGE_COUNT } from "../lib/image-generation";
+import { GenerationModeDropdown } from "./generation-mode-dropdown";
 import {
   ArrowUpIcon,
   MagicIcon,
   PlusCardIcon,
-  SparkIcon,
   StoryIcon,
+  GridIcon,
 } from "./product-icons";
 
 const STYLE_PRESET_OPTIONS = [
@@ -55,6 +62,9 @@ interface InputPanelProps {
   isSubmitting: boolean;
   preflight: RuntimePreflight;
   mode?: "home" | "workspace";
+  generationMode?: GenerationMode;
+  defaultGenerationMode?: GenerationMode;
+  onGenerationModeChange?: (mode: GenerationMode) => void;
 }
 
 export function InputPanel({
@@ -62,12 +72,18 @@ export function InputPanel({
   isSubmitting,
   preflight,
   mode = "home",
+  generationMode: controlledGenerationMode,
+  defaultGenerationMode,
+  onGenerationModeChange,
 }: InputPanelProps) {
+  const [internalGenerationMode, setInternalGenerationMode] =
+    useState<GenerationMode>(defaultGenerationMode ?? "video");
   const [sourceType, setSourceType] = useState<"text" | "url">("text");
   const [sourceInput, setSourceInput] = useState("");
   const [stylePreset, setStylePreset] = useState<StylePresetId>(
     STYLE_PRESET_OPTIONS[0].id,
   );
+  const [imageAspect, setImageAspect] = useState<ImageAspect>("portrait");
   const availableProviders = useMemo(
     () =>
       preflight.availableVideoProviders.length > 0
@@ -81,6 +97,7 @@ export function InputPanel({
   const [videoModel, setVideoModel] = useState(getDefaultVideoModel("openai"));
   const [videoSeconds, setVideoSeconds] = useState(8);
   const currentModelOptions = VIDEO_MODEL_OPTIONS[videoProvider];
+  const generationMode = controlledGenerationMode ?? internalGenerationMode;
 
   useEffect(() => {
     if (!availableProviders.includes(videoProvider)) {
@@ -91,18 +108,52 @@ export function InputPanel({
     }
   }, [availableProviders, videoProvider]);
 
+  useEffect(() => {
+    if (generationMode === "image" && sourceType !== "text") {
+      setSourceType("text");
+    }
+  }, [generationMode, sourceType]);
+
+  function handleGenerationModeChange(nextMode: GenerationMode) {
+    if (controlledGenerationMode === undefined) {
+      setInternalGenerationMode(nextMode);
+    }
+    onGenerationModeChange?.(nextMode);
+  }
+
   const isWorkspace = mode === "workspace";
+  const isImageMode = generationMode === "image";
+  const canSubmitCurrentMode = isImageMode
+    ? preflight.canGenerateImage
+    : preflight.canGenerate;
+  const currentBlockingReason = isImageMode
+    ? preflight.imageBlockingReason
+    : preflight.blockingReason;
 
   const [isFocused, setIsFocused] = useState(false);
   const isExpanded = !isWorkspace || isFocused || sourceInput.length > 0;
   
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const normalizedVideo = normalizeVideoSelection(videoProvider, videoModel);
     const selectedStyle =
       STYLE_PRESET_OPTIONS.find((option) => option.id === stylePreset) ??
       STYLE_PRESET_OPTIONS[0];
+
+    if (isImageMode) {
+      await onSubmit({
+        generationMode: "image",
+        sourceType: "text",
+        sourceInput,
+        brandTone: selectedStyle.prompt,
+        imageAspect,
+        imageCount: DEFAULT_IMAGE_COUNT,
+      });
+      return;
+    }
+
+    const normalizedVideo = normalizeVideoSelection(videoProvider, videoModel);
     await onSubmit({
+      generationMode: "video",
       sourceType,
       sourceInput,
       brandTone: selectedStyle.prompt,
@@ -128,10 +179,12 @@ export function InputPanel({
         </div>
       ) : null}
 
-      {!preflight.canGenerate ? (
+      {!canSubmitCurrentMode ? (
         <div className="mb-4 rounded-[20px] border border-[color:var(--danger)]/20 bg-[color:var(--danger-soft)] px-4 py-3 text-sm leading-6 text-[color:var(--ink-900)]">
           <span className="font-semibold">暂时无法开始生成。</span>
-          <span className="ml-2">{preflight.blockingReason}</span>
+          <span className="ml-2">
+            {currentBlockingReason || "当前模式暂时不可用。"}
+          </span>
         </div>
       ) : null}
 
@@ -174,7 +227,9 @@ export function InputPanel({
                 value={sourceInput}
                 onChange={(event) => setSourceInput(event.target.value)}
                 placeholder={
-                  sourceType === "url"
+                  isImageMode
+                    ? `输入一句话灵感，先生成 ${DEFAULT_IMAGE_COUNT} 张可挑选的图片素材。`
+                    : sourceType === "url"
                     ? "贴一个公开链接，我会先提取内容，再扩成剧情和视频。"
                     : "输入一句话灵感、热点事件或一个很薄的故事起点..."
                 }
@@ -183,95 +238,97 @@ export function InputPanel({
               <div
                 className={`transition-all duration-200 overflow-hidden ${
                   isExpanded
-                    ? "mt-2 max-h-[300px] border-t border-[color:var(--line-soft)] pt-3 opacity-100"
-                    : "max-h-0 opacity-0"
+                    ? "mt-2 max-h-[300px] overflow-visible border-t border-[color:var(--line-soft)] pt-3 opacity-100"
+                    : "max-h-0 overflow-hidden opacity-0"
                 }`}
               >
-                <div className="flex flex-wrap items-center gap-2">
-                  <div className="inline-flex rounded-full bg-white p-1">
-                    {[
-                      { value: "text", label: "一句话" },
-                      { value: "url", label: "公开链接" },
-                    ].map((option) => {
-                      const active = sourceType === option.value;
+                <div className="flex flex-wrap items-center gap-2 overflow-visible">
+                  <GenerationModeDropdown
+                    value={generationMode}
+                    onChange={handleGenerationModeChange}
+                    ariaLabel="输入框创作模式"
+                  />
 
-                      return (
-                        <button
-                          key={option.value}
-                          type="button"
-                          onClick={() => setSourceType(option.value as "text" | "url")}
-                          className={`rounded-full px-3 py-1.5 text-xs transition ${
-                            active
-                              ? "bg-[color:var(--paper-soft)] text-[color:var(--ink-900)] shadow-[0_6px_18px_rgba(15,23,42,0.06)]"
-                              : "text-[color:var(--ink-500)]"
-                          }`}
+                  {!isImageMode ? (
+                    <div className="inline-flex items-center gap-1 px-1">
+                      {[
+                        { value: "text", label: "一句话" },
+                        { value: "url", label: "公开链接" },
+                      ].map((option) => {
+                        const active = sourceType === option.value;
+
+                        return (
+                          <button
+                            key={option.value}
+                            type="button"
+                            onClick={() => setSourceType(option.value as "text" | "url")}
+                            className={`rounded-[12px] px-3 py-2 text-sm transition ${
+                              active
+                                ? "bg-white text-[color:var(--ink-900)] shadow-[0_8px_18px_rgba(15,23,42,0.06)]"
+                                : "text-[color:var(--ink-500)] hover:text-[color:var(--ink-900)]"
+                            }`}
+                          >
+                            {option.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : null}
+
+                  {!isImageMode ? (
+                    <>
+                      <div className="inline-flex items-center gap-2 rounded-[14px] border border-[color:var(--line-soft)] bg-white px-3 py-2 text-xs text-[color:var(--ink-700)]">
+                        <StoryIcon className="h-4 w-4 text-[color:var(--accent-strong)]" />
+                        <span>模型</span>
+                        <select
+                          aria-label="视频模型"
+                          className="bg-transparent outline-none"
+                          value={videoModel}
+                          onChange={(event) => setVideoModel(event.target.value)}
                         >
-                          {option.label}
-                        </button>
-                      );
-                    })}
-                  </div>
+                          {currentModelOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
 
-                  <div className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-2 text-xs text-[color:var(--ink-700)]">
-                    <SparkIcon className="h-4 w-4 text-[color:var(--accent-strong)]" />
-                    <span>引擎</span>
-                    <select
-                      aria-label="视频引擎"
-                      className="bg-transparent outline-none"
-                      value={videoProvider}
-                      onChange={(event) => {
-                        const nextProvider = event.target.value as VideoProviderId;
-                        const normalized = normalizeVideoSelection(nextProvider, videoModel);
-                        setVideoProvider(normalized.videoProvider);
-                        setVideoModel(normalized.videoModel);
-                      }}
-                      disabled={availableProviders.length === 0}
-                    >
-                      {availableProviders.map((provider) => (
-                        <option key={provider} value={provider}>
-                          {provider === "openai"
-                            ? "OpenAI"
-                            : provider === "kling"
-                              ? "Kling"
-                              : "即梦"}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                      <div className="inline-flex items-center gap-2 rounded-[14px] border border-[color:var(--line-soft)] bg-white px-3 py-2 text-xs text-[color:var(--ink-700)]">
+                        <MagicIcon className="h-4 w-4 text-[color:var(--accent-strong)]" />
+                        <span>时长</span>
+                        <select
+                          aria-label="视频时长"
+                          className="bg-transparent outline-none"
+                          value={videoSeconds}
+                          onChange={(event) => setVideoSeconds(Number(event.target.value))}
+                        >
+                          <option value={4}>4 秒</option>
+                          <option value={8}>8 秒</option>
+                          <option value={12}>12 秒</option>
+                        </select>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="inline-flex items-center gap-2 rounded-[14px] border border-[color:var(--line-soft)] bg-white px-3 py-2 text-xs text-[color:var(--ink-700)]">
+                      <GridIcon className="h-4 w-4 text-[color:var(--accent-strong)]" />
+                      <span>画幅</span>
+                      <select
+                        aria-label="图片画幅"
+                        className="bg-transparent outline-none"
+                        value={imageAspect}
+                        onChange={(event) =>
+                          setImageAspect(event.target.value as ImageAspect)
+                        }
+                      >
+                        <option value="portrait">竖版</option>
+                        <option value="square">方图</option>
+                        <option value="landscape">横版</option>
+                      </select>
+                    </div>
+                  )}
 
-                  <div className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-2 text-xs text-[color:var(--ink-700)]">
-                    <StoryIcon className="h-4 w-4 text-[color:var(--accent-strong)]" />
-                    <span>模型</span>
-                    <select
-                      aria-label="视频模型"
-                      className="bg-transparent outline-none"
-                      value={videoModel}
-                      onChange={(event) => setVideoModel(event.target.value)}
-                    >
-                      {currentModelOptions.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-2 text-xs text-[color:var(--ink-700)]">
-                    <MagicIcon className="h-4 w-4 text-[color:var(--accent-strong)]" />
-                    <span>时长</span>
-                    <select
-                      aria-label="视频时长"
-                      className="bg-transparent outline-none"
-                      value={videoSeconds}
-                      onChange={(event) => setVideoSeconds(Number(event.target.value))}
-                    >
-                      <option value={4}>4 秒</option>
-                      <option value={8}>8 秒</option>
-                      <option value={12}>12 秒</option>
-                    </select>
-                  </div>
-
-                  <div className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-2 text-xs text-[color:var(--ink-700)]">
+                  <div className="inline-flex items-center gap-2 rounded-[14px] border border-[color:var(--line-soft)] bg-white px-3 py-2 text-xs text-[color:var(--ink-700)]">
                     <StoryIcon className="h-4 w-4 text-[color:var(--accent-strong)]" />
                     <span>风格</span>
                     <select
@@ -297,7 +354,7 @@ export function InputPanel({
                   type="submit"
                   aria-label="开始生成"
                   disabled={
-                    isSubmitting || !sourceInput.trim() || !preflight.canGenerate
+                    isSubmitting || !sourceInput.trim() || !canSubmitCurrentMode
                   }
                   className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[color:var(--accent)] to-[color:var(--accent-strong)] text-white shadow-[0_8px_20px_rgba(26,151,255,0.24)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:from-[color:var(--ink-500)] disabled:to-[color:var(--ink-500)] disabled:shadow-none"
                 >

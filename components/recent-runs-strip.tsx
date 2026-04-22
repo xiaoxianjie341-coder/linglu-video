@@ -1,7 +1,12 @@
 import Link from "next/link";
 import type { RunRecord } from "../lib/schemas";
 import { buildRunAssetUrl } from "../lib/run-assets";
-import { getRunDisplaySummary, getRunDisplayTitle } from "../lib/run-presenter";
+import {
+  getRunDisplaySummary,
+  getRunDisplayTitle,
+  getRunPreviewPath,
+  hasRenderableResult,
+} from "../lib/run-presenter";
 
 interface RecentRunsStripProps {
   runs: RunRecord[];
@@ -14,6 +19,7 @@ const statusLabelMap: Record<RunRecord["status"], string> = {
   planning: "构思中",
   storyboarding: "出图中",
   videoing: "成片中",
+  imaging: "出图中",
   completed: "已完成",
   failed: "失败",
 };
@@ -23,7 +29,7 @@ export function RecentRunsStrip({
   deletingRunId = null,
   onDelete,
 }: RecentRunsStripProps) {
-  const visibleRuns = runs.filter((run) => Boolean(run.video));
+  const visibleRuns = runs.filter((run) => hasRenderableResult(run));
 
   if (visibleRuns.length === 0) {
     return null;
@@ -48,10 +54,7 @@ export function RecentRunsStrip({
       <div className="grid gap-3 lg:grid-cols-3">
         {visibleRuns.slice(0, 6).map((run) => (
           (() => {
-            const previewPath =
-              run.video?.thumbnailPath ||
-              run.storyboards.find((item) => item.kind === "grid")?.path ||
-              run.storyboards[0]?.path;
+            const previewPath = getRunPreviewPath(run);
             const previewUrl = buildRunAssetUrl(run.id, previewPath);
             const cardTitle = getRunDisplayTitle(run, 28);
             const cardSummary = getRunDisplaySummary(run, 72);
@@ -84,7 +87,9 @@ export function RecentRunsStrip({
                     ) : (
                       <div className="flex h-full items-center justify-center bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.92),rgba(227,238,252,0.92),rgba(214,229,248,0.96))] px-6 text-center">
                         <p className="text-xs font-medium uppercase tracking-[0.2em] text-[color:var(--ink-500)]">
-                          已生成视频
+                          {run.request.generationMode === "image"
+                            ? "已生成图片"
+                            : "已生成视频"}
                         </p>
                       </div>
                     )}

@@ -24,6 +24,24 @@ export function getRunDisplaySummary(run: RunRecord, maxLength = 72): string {
   return truncateText(getSecondaryText(run), maxLength);
 }
 
+export function getRunPreviewPath(run: RunRecord): string | null {
+  return (
+    run.video?.thumbnailPath ??
+    run.images?.[0]?.path ??
+    run.storyboards?.find((item) => item.kind === "grid")?.path ??
+    run.storyboards?.[0]?.path ??
+    null
+  );
+}
+
+export function hasRenderableResult(run: RunRecord): boolean {
+  return Boolean(
+    run.video ||
+      (run.images?.length ?? 0) > 0 ||
+      (run.storyboards?.length ?? 0) > 0,
+  );
+}
+
 export function formatRunCreatedAt(
   createdAt: string,
   options?: { timeZone?: string },

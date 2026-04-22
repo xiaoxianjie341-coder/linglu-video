@@ -5,7 +5,12 @@ import { useRouter } from "next/navigation";
 import { InputPanel } from "./input-panel";
 import { HomeHero } from "./home-hero";
 import { RecentRunsStrip } from "./recent-runs-strip";
-import type { GenerationRequest, RunRecord, RuntimePreflight } from "../lib/schemas";
+import type {
+  GenerationMode,
+  GenerationRequest,
+  RunRecord,
+  RuntimePreflight,
+} from "../lib/schemas";
 
 interface StudioPageProps {
   initialRuns: RunRecord[];
@@ -15,6 +20,7 @@ interface StudioPageProps {
 export function StudioPage({ initialRuns, preflight }: StudioPageProps) {
   const router = useRouter();
   const [runs, setRuns] = useState(initialRuns);
+  const [generationMode, setGenerationMode] = useState<GenerationMode>("video");
   const [requestError, setRequestError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deletingRunId, setDeletingRunId] = useState<string | null>(null);
@@ -70,7 +76,11 @@ export function StudioPage({ initialRuns, preflight }: StudioPageProps) {
 
   return (
     <div className="space-y-8">
-      <HomeHero preflight={preflight} />
+      <HomeHero
+        preflight={preflight}
+        generationMode={generationMode}
+        onGenerationModeChange={setGenerationMode}
+      />
 
       {requestError ? (
         <div className="mx-auto max-w-[920px] rounded-[24px] border border-[color:var(--danger)]/20 bg-[color:var(--danger-soft)] px-5 py-4 text-sm text-[color:var(--ink-900)]">
@@ -83,6 +93,8 @@ export function StudioPage({ initialRuns, preflight }: StudioPageProps) {
           onSubmit={handleGenerate}
           isSubmitting={isSubmitting}
           preflight={preflight}
+          generationMode={generationMode}
+          onGenerationModeChange={setGenerationMode}
         />
       </div>
 

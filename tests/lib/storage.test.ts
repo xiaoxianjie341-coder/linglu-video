@@ -91,6 +91,24 @@ describe("Storage: web MVP", () => {
     expect(reloaded?.failedPhase).toBe("storyboarding");
   });
 
+  it("creates image runs with image-mode request metadata", async () => {
+    const run = await createRun(
+      {
+        generationMode: "image",
+        sourceType: "text",
+        sourceInput: "春天清晨的咖啡馆橱窗，适合做品牌素材。",
+        brandTone: "广告质感",
+        imageAspect: "portrait",
+        imageCount: 4,
+      },
+      tempDir,
+    );
+
+    expect(run.request.generationMode).toBe("image");
+    expect(run.images).toEqual([]);
+    expect(run.status).toBe("queued");
+  });
+
   it("deletes a run record and removes it from the list", async () => {
     const run = await createRun(
       {

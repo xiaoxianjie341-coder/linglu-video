@@ -27,9 +27,13 @@ describe("POST /api/generate", () => {
     mocked.loadRuntimePreflight.mockResolvedValue({
       plannerReady: true,
       storyboardImageReady: true,
+      imageReady: true,
       availableVideoProviders: ["openai"],
       canGenerate: false,
+      canGenerateImage: false,
       blockingReason: "Kling 当前还没有真实 API 适配器。",
+      imageBlockingReason:
+        "还没有配置 OpenAI API Key，请先在设置页保存，或设置 OPENAI_API_KEY 环境变量。",
     });
   });
 
@@ -58,5 +62,58 @@ describe("POST /api/generate", () => {
     expect(payload.error).toContain("Kling");
     expect(mocked.createRun).not.toHaveBeenCalled();
     expect(mocked.runGeneration).not.toHaveBeenCalled();
+  });
+
+  it("accepts image generation requests when image preflight is available even if video generation is blocked", async () => {
+    mocked.loadRuntimePreflight.mockResolvedValueOnce({
+      plannerReady: false,
+      storyboardImageReady: true,
+      imageReady: true,
+      availableVideoProviders: ["openai"],
+      canGenerate: false,
+      canGenerateImage: true,
+      blockingReason: "当前规划器链路仅支持 OpenAI，灵鹿已预留但暂不可执行。",
+      imageBlockingReason: null,
+    });
+
+    const response = await POST(
+      new Request("http://localhost/api/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          generationMode: "image",
+          sourceType: "text",
+          sourceInput: "春天清晨的咖啡馆橱窗，适合做品牌素材。",
+          brandTone: "广告质感",
+          imageAspect: "portrait",
+          imageCount: 4,
+        }),
+      }),
+    );
+
+    const payload = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(payload.runId).toBe("run_123");
+    expect(mocked.loadRuntimePreflight).toHaveBeenCalledWith(
+      undefined,
+      expect.objectContaining({
+        generationMode: "image",
+      }),
+    );
+    expect(mocked.createRun).toHaveBeenCalledWith(
+      expect.objectContaining({
+        generationMode: "image",
+        imageCount: 4,
+      }),
+    );
+    expect(mocked.runGeneration).toHaveBeenCalledWith(
+      "run_123",
+      expect.objectContaining({
+        generationMode: "image",
+      }),
+    );
   });
 });

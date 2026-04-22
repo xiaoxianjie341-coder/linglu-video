@@ -8,14 +8,17 @@ import type {
   RunRecord,
   RuntimePreflight,
 } from "../lib/schemas";
+import { DEFAULT_IMAGE_COUNT } from "../lib/image-generation";
 import {
   formatRunCreatedAt,
   getRunDisplaySummary,
   getRunDisplayTitle,
+  getRunPreviewPath,
 } from "../lib/run-presenter";
 import { buildRunAssetUrl } from "../lib/run-assets";
 import { mapRunToStages } from "../lib/run-stage-mapping";
 import { DirectorReport } from "./director-report";
+import { ImageResult } from "./image-result";
 import { InputPanel } from "./input-panel";
 import { RunInputCard } from "./run-input-card";
 import { RunStageCard } from "./run-stage-card";
@@ -37,6 +40,7 @@ const statusLabelMap: Record<RunRecord["status"], string> = {
   planning: "构思中",
   storyboarding: "出图中",
   videoing: "成片中",
+  imaging: "出图中",
   completed: "已完成",
   failed: "失败",
 };
@@ -106,6 +110,10 @@ export function RunDetailPage({
   const pipelineStages = stages.slice(1);
   const runTitle = getRunDisplayTitle(run, 40);
   const runSummary = getRunDisplaySummary(run, 120);
+  const isImageRun = run.request.generationMode === "image";
+  const imageRequest = isImageRun
+    ? (run.request as Extract<GenerationRequest, { generationMode: "image" }>)
+    : null;
 
   async function handleGenerate(payload: GenerationRequest) {
     setRequestError(null);
@@ -165,11 +173,7 @@ export function RunDetailPage({
               .map((item) => {
                 const active = item.id === run.id;
                 const itemTitle = getRunDisplayTitle(item, 22);
-
-                const previewPath =
-                  item.video?.thumbnailPath ||
-                  item.storyboards.find((sb) => sb.kind === "grid")?.path ||
-                  item.storyboards[0]?.path;
+                const previewPath = getRunPreviewPath(item);
                 const previewUrl = buildRunAssetUrl(item.id, previewPath);
 
                 return (
@@ -244,8 +248,12 @@ export function RunDetailPage({
           <div className="mb-5 flex items-center gap-2 text-sm text-[color:var(--ink-500)]">
             <SparkIcon className="h-4 w-4 text-[color:var(--accent-strong)]" />
             {run.status === "completed"
-              ? "这条已经完成，可以直接开始下一条。"
-              : "正在生成中，结果会自动更新。"}
+              ? isImageRun
+                ? `${run.images.length || imageRequest?.imageCount || DEFAULT_IMAGE_COUNT} 张候选画面已经准备好，直接挑你更喜欢的方向就行。`
+                : "这条已经完成，可以直接开始下一条。"
+              : isImageRun
+                ? `正在先给你铺开 ${imageRequest?.imageCount ?? DEFAULT_IMAGE_COUNT} 张预览图，喜欢的方向会逐张亮起。`
+                : "正在生成中，结果会自动更新。"}
           </div>
 
           <RunTimeline>
@@ -260,6 +268,18 @@ export function RunDetailPage({
                   </>
                 ) : stage.id === "storyboarding" ? (
                   <StoryboardGrid runId={run.id} storyboards={run.storyboards} />
+                ) : stage.id === "imaging" ? (
+                  <ImageResult
+                    runId={run.id}
+                    images={run.images}
+                    expectedCount={
+                      imageRequest?.imageCount
+                    }
+                    isGenerating={stage.state === "active"}
+                    previewAspect={
+                      imageRequest?.imageAspect
+                    }
+                  />
                 ) : stage.id === "videoing" ? (
                   <VideoResult runId={run.id} video={run.video} />
                 ) : null;
@@ -271,7 +291,7 @@ export function RunDetailPage({
                   description={stage.description}
                   state={stage.state}
                   error={stage.error}
-                  isFinal={stage.id === "videoing"}
+                  isFinal={stage.id === "videoing" || stage.id === "imaging"}
                 >
                   {stageContent}
                 </RunStageCard>
@@ -286,10 +306,12 @@ export function RunDetailPage({
                 继续输入，会创建新的创作。
               </div>
               <InputPanel
+                key={run.id}
                 onSubmit={handleGenerate}
                 isSubmitting={isSubmitting}
                 preflight={preflight}
                 mode="workspace"
+                defaultGenerationMode={run.request.generationMode}
               />
             </div>
           </div>

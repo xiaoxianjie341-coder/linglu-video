@@ -5,6 +5,9 @@ interface RunInputCardProps {
 }
 
 export function RunInputCard({ run }: RunInputCardProps) {
+  const request = run.request;
+  const isImageRun = request.generationMode === "image";
+
   return (
     <section className="flex justify-end">
       <div className="max-w-[76%] rounded-[28px] border border-[color:var(--line-soft)] bg-[linear-gradient(180deg,#f3f6fb,#eef3fa)] px-5 py-4 shadow-[0_12px_32px_rgba(15,23,42,0.05)]">
@@ -23,7 +26,12 @@ export function RunInputCard({ run }: RunInputCardProps) {
 
         <div className="mt-3 flex flex-wrap gap-2 text-xs text-[color:var(--ink-500)]">
           <span className="rounded-full bg-white/80 px-3 py-1">
-            {run.request.videoSeconds} 秒短片
+            {isImageRun ? "图片生成" : "视频生成"}
+          </span>
+          <span className="rounded-full bg-white/80 px-3 py-1">
+            {request.generationMode === "image"
+              ? `先看 ${request.imageCount} 张候选图`
+              : `${request.videoSeconds} 秒短片`}
           </span>
         </div>
       </div>

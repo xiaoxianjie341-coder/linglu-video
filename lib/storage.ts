@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { nanoid } from "nanoid";
 import {
   generationRequestSchema,
+  imageAssetSchema,
   plannerOutputSchema,
   runRecordSchema,
   settingsSchema,
@@ -11,6 +12,7 @@ import {
   storyboardAssetSchema,
   videoAssetSchema,
   type GenerationRequest,
+  type ImageAsset,
   type PlannerOutput,
   type RunRecord,
   type StoryboardAsset,
@@ -119,11 +121,13 @@ export async function createRun(
     request,
     planner: null,
     storyboards: [],
+    images: [],
     video: null,
     error: null,
   });
 
   await ensureDir(join(getRunDir(run.id, baseDir), "storyboards"));
+  await ensureDir(join(getRunDir(run.id, baseDir), "images"));
   await ensureDir(join(getRunDir(run.id, baseDir), "video"));
   await writeJson(getRunPath(run.id, baseDir), run);
 
@@ -235,4 +239,28 @@ export async function writeVideoArtifact(
 ): Promise<void> {
   const parsed = videoAssetSchema.parse(video);
   await updateRun(runId, { video: parsed }, baseDir);
+}
+
+export async function writeImageArtifact(
+  runId: string,
+  image: ImageAsset,
+  baseDir?: string,
+): Promise<void> {
+  const parsed = imageAssetSchema.parse(image);
+  const run = await getRun(runId, baseDir);
+
+  if (!run) {
+    throw new Error(`Run not found: ${runId}`);
+  }
+
+  const images = [...run.images];
+  const existingIndex = images.findIndex((item) => item.imageId === parsed.imageId);
+
+  if (existingIndex >= 0) {
+    images[existingIndex] = parsed;
+  } else {
+    images.push(parsed);
+  }
+
+  await updateRun(runId, { images }, baseDir);
 }

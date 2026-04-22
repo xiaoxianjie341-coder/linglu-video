@@ -93,6 +93,16 @@ export function GridIcon(props: IconProps) {
   );
 }
 
+export function ImageIcon(props: IconProps) {
+  return (
+    <BaseIcon {...props}>
+      <rect x="4.5" y="5.5" width="15" height="13" rx="2.2" />
+      <path d="M8 14L10.8 11.2L13.4 13.8L15.8 10.8L19.5 15.2" />
+      <path d="M9 9.4H9.01" />
+    </BaseIcon>
+  );
+}
+
 export function VideoIcon(props: IconProps) {
   return (
     <BaseIcon {...props}>
@@ -144,6 +154,33 @@ export function ChevronDownIcon(props: IconProps) {
   return (
     <BaseIcon {...props}>
       <path d="M6 9l6 6 6-6" />
+    </BaseIcon>
+  );
+}
+
+export function CheckIcon(props: IconProps) {
+  return (
+    <BaseIcon {...props}>
+      <path d="M5.5 12.5L10 17L18.5 8.5" />
+    </BaseIcon>
+  );
+}
+
+export function XIcon(props: IconProps) {
+  return (
+    <BaseIcon {...props}>
+      <path d="M18 6L6 18" />
+      <path d="M6 6L18 18" />
+    </BaseIcon>
+  );
+}
+
+export function DownloadIcon(props: IconProps) {
+  return (
+    <BaseIcon {...props}>
+      <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15" />
+      <path d="M7 10L12 15L17 10" />
+      <path d="M12 15V3" />
     </BaseIcon>
   );
 }

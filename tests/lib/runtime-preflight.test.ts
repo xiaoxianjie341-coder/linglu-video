@@ -19,7 +19,9 @@ describe("runtime preflight", () => {
     );
 
     expect(result.canGenerate).toBe(false);
+    expect(result.canGenerateImage).toBe(false);
     expect(result.blockingReason).toContain("OpenAI");
+    expect(result.imageBlockingReason).toContain("OpenAI");
   });
 
   it("still blocks generation when linglu is configured but the real planner chain is not executable", () => {
@@ -40,6 +42,7 @@ describe("runtime preflight", () => {
 
     expect(result.plannerReady).toBe(false);
     expect(result.canGenerate).toBe(false);
+    expect(result.canGenerateImage).toBe(true);
     expect(result.blockingReason).toContain("当前规划器链路仅支持 OpenAI");
   });
 
@@ -60,5 +63,32 @@ describe("runtime preflight", () => {
     );
 
     expect(result.availableVideoProviders).toEqual(["openai"]);
+  });
+
+  it("keeps image generation available when only the video planner chain is blocked", () => {
+    const result = resolveRuntimePreflight(
+      {
+        openaiApiKey: "sk-test-123",
+        plannerProvider: "linglu",
+        lingluApiKey: "ll-test-123",
+        lingluBaseUrl: "https://gateway.linglu.ai/v1",
+        klingApiKey: "",
+        klingBaseUrl: "",
+        jimengApiKey: "",
+        jimengBaseUrl: "",
+      },
+      {
+        generationMode: "image",
+        sourceType: "text",
+        sourceInput: "春天清晨的咖啡馆橱窗，适合做品牌素材。",
+        imageAspect: "portrait",
+        imageCount: 4,
+      },
+      {},
+    );
+
+    expect(result.canGenerate).toBe(false);
+    expect(result.canGenerateImage).toBe(true);
+    expect(result.imageBlockingReason).toBeNull();
   });
 });

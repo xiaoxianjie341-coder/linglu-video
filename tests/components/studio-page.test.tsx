@@ -24,6 +24,45 @@ describe("StudioPage", () => {
     cleanup();
   });
 
+  it("switches mode from the small hero arrow menu and syncs the input panel", async () => {
+    render(
+      <StudioPage
+        initialRuns={[]}
+        preflight={{
+          plannerReady: true,
+          storyboardImageReady: true,
+          imageReady: true,
+          availableVideoProviders: ["openai"],
+          canGenerate: true,
+          canGenerateImage: true,
+          blockingReason: null,
+          imageBlockingReason: null,
+        }}
+      />,
+    );
+
+    expect(
+      screen.getByRole("button", { name: "顶部创作模式" }).textContent,
+    ).toContain("视频生成");
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "顶部创作模式" }),
+    );
+    await userEvent.click(
+      screen.getByRole("menuitemradio", { name: "切换到图片生成" }),
+    );
+
+    expect(
+      screen.getByRole("button", { name: "顶部创作模式" }).textContent,
+    ).toContain("图片生成");
+    expect(
+      screen.getByText(/先写下一句话，先生成 2 张可挑选的图片素材/),
+    ).toBeTruthy();
+    expect(screen.getByLabelText("图片画幅")).toBeTruthy();
+    expect(screen.queryByLabelText("视频引擎")).toBeNull();
+    expect(screen.queryByRole("button", { name: "公开链接" })).toBeNull();
+  });
+
   it("navigates to /runs/[id] after a successful homepage submission", async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
@@ -37,9 +76,12 @@ describe("StudioPage", () => {
         preflight={{
           plannerReady: true,
           storyboardImageReady: true,
+          imageReady: true,
           availableVideoProviders: ["openai"],
           canGenerate: true,
+          canGenerateImage: true,
           blockingReason: null,
+          imageBlockingReason: null,
         }}
       />,
     );
@@ -69,9 +111,12 @@ describe("StudioPage", () => {
         preflight={{
           plannerReady: true,
           storyboardImageReady: true,
+          imageReady: true,
           availableVideoProviders: ["openai"],
           canGenerate: true,
+          canGenerateImage: true,
           blockingReason: null,
+          imageBlockingReason: null,
         }}
       />,
     );
@@ -147,9 +192,12 @@ describe("StudioPage", () => {
         preflight={{
           plannerReady: true,
           storyboardImageReady: true,
+          imageReady: true,
           availableVideoProviders: ["openai"],
           canGenerate: true,
+          canGenerateImage: true,
           blockingReason: null,
+          imageBlockingReason: null,
         }}
       />,
     );

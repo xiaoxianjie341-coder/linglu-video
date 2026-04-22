@@ -1,19 +1,38 @@
 import { z } from "zod";
 import { getDefaultVideoModel, VIDEO_PROVIDER_IDS } from "./video-providers/catalog";
+import { DEFAULT_IMAGE_COUNT } from "./image-generation";
 
+const generationModeSchema = z.enum(["video", "image"]);
+const imageAspectSchema = z.enum(["portrait", "square", "landscape"]);
 const plannerProviderSchema = z.enum(["openai", "linglu"]);
 const videoProviderSchema = z.enum(VIDEO_PROVIDER_IDS);
 const optionalUrlSchema = z.union([z.string().url(), z.literal("")]);
 
-export const generationRequestSchema = z.object({
+const requestBaseSchema = z.object({
   sourceType: z.enum(["text", "url"]),
   sourceInput: z.string().min(1),
   brandTone: z.string().optional(),
+});
+
+const videoGenerationRequestSchema = requestBaseSchema.extend({
+  generationMode: z.literal("video").default("video"),
   shotCount: z.number().int().min(1).max(9).default(9),
   videoProvider: videoProviderSchema.default("openai"),
   videoModel: z.string().min(1).default(getDefaultVideoModel("openai")),
   videoSeconds: z.number().int().min(4).max(20).default(8),
 });
+
+const imageGenerationRequestSchema = requestBaseSchema.extend({
+  generationMode: z.literal("image"),
+  sourceType: z.literal("text"),
+  imageAspect: imageAspectSchema.default("portrait"),
+  imageCount: z.number().int().min(1).max(9).default(DEFAULT_IMAGE_COUNT),
+});
+
+export const generationRequestSchema = z.union([
+  imageGenerationRequestSchema,
+  videoGenerationRequestSchema,
+]);
 
 export const settingsSchema = z.object({
   openaiApiKey: z.string().min(1),
@@ -103,6 +122,14 @@ export const storyboardAssetSchema = z.object({
   qaScore: z.number().min(0).max(100).optional(),
 });
 
+export const imageAssetSchema = z.object({
+  imageId: z.string(),
+  index: z.number().int().min(1).max(9),
+  prompt: z.string(),
+  aspect: imageAspectSchema,
+  path: z.string(),
+});
+
 export const videoAssetSchema = z.object({
   provider: videoProviderSchema.default("openai"),
   model: z.string().min(1),
@@ -116,18 +143,27 @@ export const videoAssetSchema = z.object({
 export const runtimePreflightSchema = z.object({
   plannerReady: z.boolean(),
   storyboardImageReady: z.boolean(),
+  imageReady: z.boolean().default(false),
   availableVideoProviders: z.array(videoProviderSchema),
   canGenerate: z.boolean(),
+  canGenerateImage: z.boolean().default(false),
   blockingReason: z.string().nullable(),
+  imageBlockingReason: z.string().nullable().default(null),
 });
 
-export const runPhaseSchema = z.enum(["planning", "storyboarding", "videoing"]);
+export const runPhaseSchema = z.enum([
+  "planning",
+  "storyboarding",
+  "videoing",
+  "imaging",
+]);
 
 export const runStatusSchema = z.enum([
   "queued",
   "planning",
   "storyboarding",
   "videoing",
+  "imaging",
   "completed",
   "failed",
 ]);
@@ -148,17 +184,21 @@ export const runRecordSchema = z.object({
   request: generationRequestSchema,
   planner: plannerOutputSchema.nullable().default(null),
   storyboards: z.array(storyboardAssetSchema).default([]),
+  images: z.array(imageAssetSchema).default([]),
   video: videoAssetSchema.nullable().default(null),
   error: z.string().nullable().default(null),
 });
 
 export type GenerationRequest = z.infer<typeof generationRequestSchema>;
+export type GenerationMode = z.infer<typeof generationModeSchema>;
+export type ImageAspect = z.infer<typeof imageAspectSchema>;
 export type WebSettings = z.infer<typeof settingsSchema>;
 export type WebSettingsUpdate = z.infer<typeof settingsUpdateSchema>;
 export type StoredSettings = z.infer<typeof storedSettingsSchema>;
 export type Shot = z.infer<typeof shotSchema>;
 export type PlannerOutput = z.infer<typeof plannerOutputSchema>;
 export type StoryboardAsset = z.infer<typeof storyboardAssetSchema>;
+export type ImageAsset = z.infer<typeof imageAssetSchema>;
 export type VideoAsset = z.infer<typeof videoAssetSchema>;
 export type RuntimePreflight = z.infer<typeof runtimePreflightSchema>;
 export type RunStatus = z.infer<typeof runStatusSchema>;

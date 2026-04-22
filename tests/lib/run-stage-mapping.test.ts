@@ -104,4 +104,38 @@ describe("mapRunToStages", () => {
     expect(result[2]?.state).toBe("completed");
     expect(result[3]?.state).toBe("active");
   });
+
+  it("uses a shorter stage flow for image generation runs", () => {
+    const result = mapRunToStages(
+      buildRunFixture({
+        status: "imaging",
+        phaseLabel: "正在生成图片素材",
+        activePhase: "imaging",
+        failedPhase: null,
+        request: {
+          generationMode: "image",
+          sourceType: "text",
+          sourceInput: "春天清晨的咖啡馆橱窗，适合做品牌素材。",
+          brandTone: "广告质感",
+          imageAspect: "portrait",
+          imageCount: 4,
+        },
+        planner: null,
+        storyboards: [],
+        images: [
+          {
+            imageId: "image_1",
+            index: 1,
+            prompt: "适合品牌首图的主视觉构图",
+            aspect: "portrait",
+            path: "/tmp/image_1.png",
+          },
+        ],
+        video: null,
+      }),
+    );
+
+    expect(result.map((stage) => stage.id)).toEqual(["input", "imaging"]);
+    expect(result[1]?.state).toBe("active");
+  });
 });

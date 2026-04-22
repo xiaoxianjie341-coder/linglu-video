@@ -11,6 +11,16 @@ const OPENAI_MISSING_MESSAGE =
   "还没有配置 OpenAI API Key，请先在设置页保存，或设置 OPENAI_API_KEY 环境变量。";
 const LINGLU_BLOCKED_MESSAGE =
   "当前规划器链路仅支持 OpenAI，灵鹿已预留但暂不可执行。";
+type VideoPreflightRequest = {
+  generationMode?: "video";
+  videoProvider?: VideoProviderId;
+  videoModel?: string;
+};
+
+type PreflightRequest =
+  | GenerationRequest
+  | VideoPreflightRequest
+  | undefined;
 
 function getProviderLabel(provider: VideoProviderId): string {
   if (provider === "openai") return "OpenAI";
@@ -45,7 +55,7 @@ function resolveImplementedVideoProviders(
 
 function resolveRequestedProviderBlockingReason(
   settings: StoredSettings,
-  request: Pick<GenerationRequest, "videoProvider" | "videoModel"> | undefined,
+  request: VideoPreflightRequest | undefined,
   env: NodeJS.ProcessEnv,
 ): string | null {
   if (!request) {
@@ -66,22 +76,25 @@ function resolveRequestedProviderBlockingReason(
 
 export function resolveRuntimePreflight(
   settings: StoredSettings,
-  request?: Pick<GenerationRequest, "videoProvider" | "videoModel">,
+  request?: PreflightRequest,
   env: NodeJS.ProcessEnv = process.env,
 ): RuntimePreflight {
-  const storyboardImageReady = canUseOpenAIMedia(settings, env);
-  const plannerReady =
-    settings.plannerProvider === "openai" && storyboardImageReady;
+  const imageReady = canUseOpenAIMedia(settings, env);
+  const storyboardImageReady = imageReady;
+  const plannerReady = settings.plannerProvider === "openai" && imageReady;
   const availableVideoProviders = resolveImplementedVideoProviders(settings, env);
+  const videoRequest =
+    !request || request.generationMode !== "image" ? request : undefined;
   const requestedProviderBlockingReason = resolveRequestedProviderBlockingReason(
     settings,
-    request,
+    videoRequest,
     env,
   );
+  const imageBlockingReason = imageReady ? null : OPENAI_MISSING_MESSAGE;
 
   let blockingReason: string | null = null;
 
-  if (!storyboardImageReady) {
+  if (!imageReady) {
     blockingReason = OPENAI_MISSING_MESSAGE;
   } else if (settings.plannerProvider !== "openai") {
     blockingReason = LINGLU_BLOCKED_MESSAGE;
@@ -94,15 +107,18 @@ export function resolveRuntimePreflight(
   return runtimePreflightSchema.parse({
     plannerReady,
     storyboardImageReady,
+    imageReady,
     availableVideoProviders,
     canGenerate: blockingReason === null,
+    canGenerateImage: imageBlockingReason === null,
     blockingReason,
+    imageBlockingReason,
   });
 }
 
 export async function loadRuntimePreflight(
   baseDir?: string,
-  request?: Pick<GenerationRequest, "videoProvider" | "videoModel">,
+  request?: PreflightRequest,
   env: NodeJS.ProcessEnv = process.env,
 ): Promise<RuntimePreflight> {
   const settings = await readSettings(baseDir);

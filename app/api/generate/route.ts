@@ -8,15 +8,20 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const payload = generationRequestSchema.parse(body);
-    const runtimePreflight = await loadRuntimePreflight(undefined, {
-      videoProvider: payload.videoProvider,
-      videoModel: payload.videoModel,
-    });
+    const runtimePreflight = await loadRuntimePreflight(undefined, payload);
+    const canStartGeneration =
+      payload.generationMode === "image"
+        ? runtimePreflight.canGenerateImage
+        : runtimePreflight.canGenerate;
+    const blockingReason =
+      payload.generationMode === "image"
+        ? runtimePreflight.imageBlockingReason
+        : runtimePreflight.blockingReason;
 
-    if (!runtimePreflight.canGenerate) {
+    if (!canStartGeneration) {
       return NextResponse.json(
         {
-          error: runtimePreflight.blockingReason || "当前配置还不能开始生成。",
+          error: blockingReason || "当前配置还不能开始生成。",
         },
         { status: 400 },
       );

@@ -78,6 +78,41 @@ describe("RecentRunsStrip", () => {
             error: null,
           },
           {
+            id: "imgRun123",
+            createdAt: "2026-04-17T00:30:00.000Z",
+            updatedAt: "2026-04-17T00:30:00.000Z",
+            status: "completed",
+            phaseLabel: "生成完成",
+            activePhase: null,
+            failedPhase: null,
+            source: {
+              type: "text",
+              input: "春天清晨的咖啡馆橱窗，适合做品牌素材。",
+            },
+            brandTone: "广告质感",
+            request: {
+              generationMode: "image",
+              sourceType: "text",
+              sourceInput: "春天清晨的咖啡馆橱窗，适合做品牌素材。",
+              brandTone: "广告质感",
+              imageAspect: "portrait",
+              imageCount: 4,
+            },
+            planner: null,
+            storyboards: [],
+            images: [
+              {
+                imageId: "image_1",
+                index: 1,
+                prompt: "适合品牌首图的主视觉构图",
+                aspect: "portrait",
+                path: "/mock/data/runs/imgRun123/images/image_1.png",
+              },
+            ],
+            video: null,
+            error: null,
+          },
+          {
             id: "ta3cXfYCzc",
             createdAt: "2026-04-17T01:00:00.000Z",
             updatedAt: "2026-04-17T01:00:00.000Z",
@@ -100,6 +135,7 @@ describe("RecentRunsStrip", () => {
             },
             planner: null,
             storyboards: [],
+            images: [],
             video: null,
             error: "生成失败",
           },
@@ -108,8 +144,12 @@ describe("RecentRunsStrip", () => {
     );
 
     expect(screen.getByText("妈妈教会我的事")).toBeTruthy();
+    expect(
+      screen.getByRole("img", { name: "春天清晨的咖啡馆橱窗，适合做品牌素材。" }),
+    ).toBeTruthy();
     expect(screen.queryByText("ta3cXfYCzc")).toBeNull();
     expect(screen.queryByText("KxcXBhvtqW")).toBeNull();
+    expect(screen.queryByText("imgRun123")).toBeNull();
     expect(screen.queryByText("失败任务不应该出现在首页。")).toBeNull();
   });
 

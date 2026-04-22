@@ -1,7 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import sharp from "sharp";
-import type { PlannerOutput, StoryboardAsset } from "../schemas";
+import type { ImageAspect, PlannerOutput, StoryboardAsset } from "../schemas";
 import { getRunsDir, writeStoryboardArtifact } from "../storage";
 import { getOpenAIClient } from "./client";
 import { withOpenAIReconnectRetry } from "./retry";
@@ -10,6 +10,7 @@ const VIDEO_FRAME_WIDTH = 720;
 const VIDEO_FRAME_HEIGHT = 1280;
 const LANDSCAPE_VIDEO_FRAME_WIDTH = 1280;
 const LANDSCAPE_VIDEO_FRAME_HEIGHT = 720;
+const SQUARE_IMAGE_SIZE = 1024;
 
 export async function normalizeStoryboardImage(
   source: Buffer,
@@ -33,6 +34,82 @@ export async function normalizeLandscapeStoryboardImage(
     })
     .png()
     .toBuffer();
+}
+
+export async function normalizeSquareImage(source: Buffer): Promise<Buffer> {
+  return sharp(source)
+    .resize(SQUARE_IMAGE_SIZE, SQUARE_IMAGE_SIZE, {
+      fit: "cover",
+      position: "attention",
+    })
+    .png()
+    .toBuffer();
+}
+
+function resolveOpenAIImageSize(aspect: ImageAspect): "1024x1536" | "1024x1024" | "1536x1024" {
+  if (aspect === "landscape") {
+    return "1536x1024";
+  }
+
+  if (aspect === "square") {
+    return "1024x1024";
+  }
+
+  return "1024x1536";
+}
+
+async function normalizeGeneratedImage(
+  source: Buffer,
+  aspect: ImageAspect,
+): Promise<Buffer> {
+  if (aspect === "landscape") {
+    return normalizeLandscapeStoryboardImage(source);
+  }
+
+  if (aspect === "square") {
+    return normalizeSquareImage(source);
+  }
+
+  return normalizeStoryboardImage(source);
+}
+
+interface GenerateImageCandidateOptions {
+  index: number;
+  prompt: string;
+  aspect: ImageAspect;
+  outputPath: string;
+  baseDir?: string;
+}
+
+export async function generateImageCandidate({
+  index,
+  prompt,
+  aspect,
+  outputPath,
+  baseDir,
+}: GenerateImageCandidateOptions): Promise<void> {
+  const image = await withOpenAIReconnectRetry(
+    `生成图片素材 ${index}`,
+    async () => getOpenAIClient(baseDir),
+    async (openai) =>
+      openai.images.generate({
+        model: "gpt-image-1.5",
+        prompt,
+        size: resolveOpenAIImageSize(aspect),
+      }),
+  );
+
+  const imageBase64 = image.data?.[0]?.b64_json;
+
+  if (!imageBase64) {
+    throw new Error(`图片素材 ${index} 没有返回图片。`);
+  }
+
+  const normalizedImage = await normalizeGeneratedImage(
+    Buffer.from(imageBase64, "base64"),
+    aspect,
+  );
+  await writeFile(outputPath, normalizedImage);
 }
 
 interface GenerateStoryboardsOptions {

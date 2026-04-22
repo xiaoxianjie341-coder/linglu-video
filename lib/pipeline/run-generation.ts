@@ -21,6 +21,7 @@ import {
   writeStoryboardArtifact,
   writeVideoArtifact,
 } from "../storage";
+import { runImageGeneration } from "./run-image-generation";
 
 const GENERATION_CHAIN_ATTEMPTS = 2;
 const GENERATION_CHAIN_RETRY_DELAY_MS = 1_500;
@@ -172,6 +173,11 @@ export async function runGeneration(
   request: GenerationRequest,
   baseDir?: string,
 ): Promise<void> {
+  if (request.generationMode === "image") {
+    await runImageGeneration(runId, request, baseDir);
+    return;
+  }
+
   let lastActivePhase: "planning" | "storyboarding" | "videoing" = "planning";
 
   try {
