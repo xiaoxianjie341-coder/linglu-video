@@ -1,0 +1,160 @@
+{
+  "title": "霓虹下的发光柠檬",
+  "content_summary": "夜晚的便利店门口，一只会发出柔和黄绿色光的柠檬停在湿润地面上，先被头顶霓虹吸引，随后缓慢靠近玻璃门，在冷暖光交汇中完成一个安静而完整的情绪段落。",
+  "brand_tone": "电影感、克制、叙事清晰、人物和场景稳定",
+  "visual_style": "写实电影感短片风格，夜景高对比但不过曝，冷色街头霓虹与便利店暖白光形成反差，湿润地面倒影清晰，镜头语言克制流畅，浅景深与适度颗粒感并存，整体安静、诗意、孤独。",
+  "frozen_world": {
+    "subject_type": "物体",
+    "subject_identity": "一只中等大小的柠檬，椭圆形，表皮真实粗糙，内部持续发出柔和稳定的黄绿色光晕，没有五官、没有四肢，不拟人化，只通过轻微倾斜、停顿和滚动表达情绪。",
+    "setting": "城市街角的一家便利店门口，玻璃自动门、红蓝霓虹招牌、门楣白色顶灯、湿润柏油地面和浅浅水渍始终存在，店内能看到整齐货架和暖色荧光灯。",
+    "time_of_day": "深夜，街道安静，空气微潮，刚下过雨或地面仍带湿意。",
+    "anchors": [
+      "便利店玻璃自动门、红蓝霓虹招牌和门口白色顶灯在全片中保持一致位置与外观。",
+      "湿润地面上的倒影始终可见，柠檬自身的黄绿色发光与环境冷暖光持续共存。",
+      "相同的面部特征或物种特征"
+    ],
+    "negative_constraints": [
+      "不要把柠檬改成卡通角色，不要出现五官、手脚、衣物或夸张表情。",
+      "不要更换到其他地点、白天场景或完全不同的天气，不要引入新的主要角色抢占主体。",
+      "不要更换角色"
+    ]
+  },
+  "shots": [
+    {
+      "id": "shot_01",
+      "grid_index": 1,
+      "goal": "建立夜晚便利店门口与主角的存在。",
+      "narrative_beat": "安静的街角里，发光柠檬独自停在门口地面上，世界先被确认下来。",
+      "camera": "广角低机位远景，镜头贴近湿润地面，缓慢向前推近，保留整家便利店门头与一小段空街道。",
+      "frame_description": "画面下方偏左是一只发出柔和黄绿色光的柠檬，前方是便利店玻璃门，头顶红蓝霓虹与白色顶灯一起照亮湿地，倒影被拉长，街道空荡。",
+      "motion_extension": "镜头缓慢推进，柠檬几乎不动，只在光晕边缘有轻微呼吸感，地面反光随角度变化微微流动。",
+      "qa_focus": [
+        "便利店门头、玻璃门、湿地倒影是否稳定建立",
+        "柠檬是否保持真实无五官的发光形态"
+      ],
+      "duration_seconds": 4,
+      "video_prompt": "You are a strict shot-execution video director.\nThis clip is shot_01 from a locked 3x3 storyboard master.\nThe reference image is the exact crop of the current panel.\nDo not re-invent the story, character, or setting.\n\nFrozen world:\n- Subject identity: 一只中等大小的柠檬，椭圆形，表皮真实粗糙，内部持续发出柔和稳定的黄绿色光晕，没有五官、没有四肢，不拟人化，只通过轻微倾斜、停顿和滚动表达情绪。\n- Setting: 城市街角的一家便利店门口，玻璃自动门、红蓝霓虹招牌、门楣白色顶灯、湿润柏油地面和浅浅水渍始终存在，店内能看到整齐货架和暖色荧光灯。\n- Time / atmosphere: 深夜，街道安静，空气微潮，刚下过雨或地面仍带湿意。\n- Visual style: 写实电影感短片风格，夜景高对比但不过曝，冷色街头霓虹与便利店暖白光形成反差，湿润地面倒影清晰，镜头语言克制流畅，浅景深与适度颗粒感并存，整体安静、诗意、孤独。\n- Consistency anchors: 便利店玻璃自动门、红蓝霓虹招牌和门口白色顶灯在全片中保持一致位置与外观。; 湿润地面上的倒影始终可见，柠檬自身的黄绿色发光与环境冷暖光持续共存。; 相同的面部特征或物种特征\n- Strict negatives: 不要把柠檬改成卡通角色，不要出现五官、手脚、衣物或夸张表情。; 不要更换到其他地点、白天场景或完全不同的天气，不要引入新的主要角色抢占主体。; 不要更换角色\n\nCurrent shot objective:\n- Goal: 建立夜晚便利店门口与主角的存在。\n- Narrative beat: 安静的街角里，发光柠檬独自停在门口地面上，世界先被确认下来。\n- Camera: 广角低机位远景，镜头贴近湿润地面，缓慢向前推近，保留整家便利店门头与一小段空街道。\n- Frame intent: 画面下方偏左是一只发出柔和黄绿色光的柠檬，前方是便利店玻璃门，头顶红蓝霓虹与白色顶灯一起照亮湿地，倒影被拉长，街道空荡。\n- Motion extension: 镜头缓慢推进，柠檬几乎不动，只在光晕边缘有轻微呼吸感，地面反光随角度变化微微流动。\n\nExecution rules:\n- Make the clip look like this exact panel has come to life.\n- Keep the same subject identity and same visual anchors.\n- Keep the same setting and world state unless the panel itself already shows the change.\n- The clip may extend motion, expression, and camera movement, but may not swap the subject or reset the scene."
+    },
+    {
+      "id": "shot_02",
+      "grid_index": 2,
+      "goal": "让观众感到柠檬正在被上方霓虹吸引。",
+      "narrative_beat": "它轻轻抬起前端，像是在看霓虹灯，注意力被牵引到上方。",
+      "camera": "中近景低角度，镜头从柠檬侧后方拍摄，轻微上摇，把柠檬与门头霓虹连接在同一构图里。",
+      "frame_description": "柠檬位于画面前景，表皮纹理清晰，前端略微抬起，背景是便利店招牌与闪烁霓虹，冷色光压在夜空里。",
+      "motion_extension": "柠檬极轻地向后一压再抬起，像短暂停顿后的仰望，霓虹有细微闪动。",
+      "qa_focus": [
+        "仰望关系是否明确",
+        "霓虹与柠檬的尺度关系是否自然"
+      ],
+      "duration_seconds": 4,
+      "video_prompt": "You are a strict shot-execution video director.\nThis clip is shot_02 from a locked 3x3 storyboard master.\nThe reference image is the exact crop of the current panel.\nDo not re-invent the story, character, or setting.\n\nFrozen world:\n- Subject identity: 一只中等大小的柠檬，椭圆形，表皮真实粗糙，内部持续发出柔和稳定的黄绿色光晕，没有五官、没有四肢，不拟人化，只通过轻微倾斜、停顿和滚动表达情绪。\n- Setting: 城市街角的一家便利店门口，玻璃自动门、红蓝霓虹招牌、门楣白色顶灯、湿润柏油地面和浅浅水渍始终存在，店内能看到整齐货架和暖色荧光灯。\n- Time / atmosphere: 深夜，街道安静，空气微潮，刚下过雨或地面仍带湿意。\n- Visual style: 写实电影感短片风格，夜景高对比但不过曝，冷色街头霓虹与便利店暖白光形成反差，湿润地面倒影清晰，镜头语言克制流畅，浅景深与适度颗粒感并存，整体安静、诗意、孤独。\n- Consistency anchors: 便利店玻璃自动门、红蓝霓虹招牌和门口白色顶灯在全片中保持一致位置与外观。; 湿润地面上的倒影始终可见，柠檬自身的黄绿色发光与环境冷暖光持续共存。; 相同的面部特征或物种特征\n- Strict negatives: 不要把柠檬改成卡通角色，不要出现五官、手脚、衣物或夸张表情。; 不要更换到其他地点、白天场景或完全不同的天气，不要引入新的主要角色抢占主体。; 不要更换角色\n\nCurrent shot objective:\n- Goal: 让观众感到柠檬正在被上方霓虹吸引。\n- Narrative beat: 它轻轻抬起前端，像是在看霓虹灯，注意力被牵引到上方。\n- Camera: 中近景低角度，镜头从柠檬侧后方拍摄，轻微上摇，把柠檬与门头霓虹连接在同一构图里。\n- Frame intent: 柠檬位于画面前景，表皮纹理清晰，前端略微抬起，背景是便利店招牌与闪烁霓虹，冷色光压在夜空里。\n- Motion extension: 柠檬极轻地向后一压再抬起，像短暂停顿后的仰望，霓虹有细微闪动。\n\nExecution rules:\n- Make the clip look like this exact panel has come to life.\n- Keep the same subject identity and same visual anchors.\n- Keep the same setting and world state unless the panel itself already shows the change.\n- The clip may extend motion, expression, and camera movement, but may not swap the subject or reset the scene."
+    },
+    {
+      "id": "shot_03",
+      "grid_index": 3,
+      "goal": "强调霓虹对柠檬情绪的影响。",
+      "narrative_beat": "它看得更久，外部霓虹与自身光芒开始在表皮上交融。",
+      "camera": "特写，镜头正对柠檬上半部，浅景深，背景霓虹化为柔散光斑，轻微环绕半步。",
+      "frame_description": "柠檬占据大部分画面，粗糙表皮上滚动着红蓝反射，自身黄绿色内光稳定透出，后方霓虹虚化成诗意色块。",
+      "motion_extension": "镜头极慢环绕，红蓝反光在表皮上缓慢移动，柠檬自身保持克制静止。",
+      "qa_focus": [
+        "表皮质感与发光效果是否真实",
+        "背景是否保持便利店霓虹而非抽象异景"
+      ],
+      "duration_seconds": 4,
+      "video_prompt": "You are a strict shot-execution video director.\nThis clip is shot_03 from a locked 3x3 storyboard master.\nThe reference image is the exact crop of the current panel.\nDo not re-invent the story, character, or setting.\n\nFrozen world:\n- Subject identity: 一只中等大小的柠檬，椭圆形，表皮真实粗糙，内部持续发出柔和稳定的黄绿色光晕，没有五官、没有四肢，不拟人化，只通过轻微倾斜、停顿和滚动表达情绪。\n- Setting: 城市街角的一家便利店门口，玻璃自动门、红蓝霓虹招牌、门楣白色顶灯、湿润柏油地面和浅浅水渍始终存在，店内能看到整齐货架和暖色荧光灯。\n- Time / atmosphere: 深夜，街道安静，空气微潮，刚下过雨或地面仍带湿意。\n- Visual style: 写实电影感短片风格，夜景高对比但不过曝，冷色街头霓虹与便利店暖白光形成反差，湿润地面倒影清晰，镜头语言克制流畅，浅景深与适度颗粒感并存，整体安静、诗意、孤独。\n- Consistency anchors: 便利店玻璃自动门、红蓝霓虹招牌和门口白色顶灯在全片中保持一致位置与外观。; 湿润地面上的倒影始终可见，柠檬自身的黄绿色发光与环境冷暖光持续共存。; 相同的面部特征或物种特征\n- Strict negatives: 不要把柠檬改成卡通角色，不要出现五官、手脚、衣物或夸张表情。; 不要更换到其他地点、白天场景或完全不同的天气，不要引入新的主要角色抢占主体。; 不要更换角色\n\nCurrent shot objective:\n- Goal: 强调霓虹对柠檬情绪的影响。\n- Narrative beat: 它看得更久，外部霓虹与自身光芒开始在表皮上交融。\n- Camera: 特写，镜头正对柠檬上半部，浅景深，背景霓虹化为柔散光斑，轻微环绕半步。\n- Frame intent: 柠檬占据大部分画面，粗糙表皮上滚动着红蓝反射，自身黄绿色内光稳定透出，后方霓虹虚化成诗意色块。\n- Motion extension: 镜头极慢环绕，红蓝反光在表皮上缓慢移动，柠檬自身保持克制静止。\n\nExecution rules:\n- Make the clip look like this exact panel has come to life.\n- Keep the same subject identity and same visual anchors.\n- Keep the same setting and world state unless the panel itself already shows the change.\n- The clip may extend motion, expression, and camera movement, but may not swap the subject or reset the scene."
+    },
+    {
+      "id": "shot_04",
+      "grid_index": 4,
+      "goal": "从观察过渡到行动。",
+      "narrative_beat": "短暂停顿后，柠檬开始向便利店门口缓慢滚动。",
+      "camera": "侧向跟拍中景，镜头与柠檬平行移动，保持低机位，速度克制。",
+      "frame_description": "柠檬从左向右缓慢滚过湿润地面，画面后方始终带着玻璃门和门侧灯箱，倒影被拖成一条细长光带。",
+      "motion_extension": "柠檬缓慢滚动一小段距离，镜头同步平移，地面水渍被压出细微亮点变化。",
+      "qa_focus": [
+        "运动方向是否清晰连续",
+        "背景锚点是否仍是同一便利店门口"
+      ],
+      "duration_seconds": 4,
+      "video_prompt": "You are a strict shot-execution video director.\nThis clip is shot_04 from a locked 3x3 storyboard master.\nThe reference image is the exact crop of the current panel.\nDo not re-invent the story, character, or setting.\n\nFrozen world:\n- Subject identity: 一只中等大小的柠檬，椭圆形，表皮真实粗糙，内部持续发出柔和稳定的黄绿色光晕，没有五官、没有四肢，不拟人化，只通过轻微倾斜、停顿和滚动表达情绪。\n- Setting: 城市街角的一家便利店门口，玻璃自动门、红蓝霓虹招牌、门楣白色顶灯、湿润柏油地面和浅浅水渍始终存在，店内能看到整齐货架和暖色荧光灯。\n- Time / atmosphere: 深夜，街道安静，空气微潮，刚下过雨或地面仍带湿意。\n- Visual style: 写实电影感短片风格，夜景高对比但不过曝，冷色街头霓虹与便利店暖白光形成反差，湿润地面倒影清晰，镜头语言克制流畅，浅景深与适度颗粒感并存，整体安静、诗意、孤独。\n- Consistency anchors: 便利店玻璃自动门、红蓝霓虹招牌和门口白色顶灯在全片中保持一致位置与外观。; 湿润地面上的倒影始终可见，柠檬自身的黄绿色发光与环境冷暖光持续共存。; 相同的面部特征或物种特征\n- Strict negatives: 不要把柠檬改成卡通角色，不要出现五官、手脚、衣物或夸张表情。; 不要更换到其他地点、白天场景或完全不同的天气，不要引入新的主要角色抢占主体。; 不要更换角色\n\nCurrent shot objective:\n- Goal: 从观察过渡到行动。\n- Narrative beat: 短暂停顿后，柠檬开始向便利店门口缓慢滚动。\n- Camera: 侧向跟拍中景，镜头与柠檬平行移动，保持低机位，速度克制。\n- Frame intent: 柠檬从左向右缓慢滚过湿润地面，画面后方始终带着玻璃门和门侧灯箱，倒影被拖成一条细长光带。\n- Motion extension: 柠檬缓慢滚动一小段距离，镜头同步平移，地面水渍被压出细微亮点变化。\n\nExecution rules:\n- Make the clip look like this exact panel has come to life.\n- Keep the same subject identity and same visual anchors.\n- Keep the same setting and world state unless the panel itself already shows the change.\n- The clip may extend motion, expression, and camera movement, but may not swap the subject or reset the scene."
+    },
+    {
+      "id": "shot_05",
+      "grid_index": 5,
+      "goal": "制造门前临近感与内外空间对照。",
+      "narrative_beat": "它来到玻璃门前，第一次在门上看见自己的发光倒影。",
+      "camera": "正面中近景，镜头置于玻璃门外，轻微下俯，构图让柠檬与玻璃反射同时出现。",
+      "frame_description": "柠檬停在门前中央偏下位置，玻璃门里外叠映出它的光点，店内整齐货架与暖色灯光透过玻璃显现，门框线条稳定。",
+      "motion_extension": "柠檬停止滚动，轻轻晃动一下后稳定下来，玻璃上的反光随门内灯闪动微微变化。",
+      "qa_focus": [
+        "反射是否清楚但不过度夸张",
+        "店内暖光与外部冷色是否形成对比"
+      ],
+      "duration_seconds": 4,
+      "video_prompt": "You are a strict shot-execution video director.\nThis clip is shot_05 from a locked 3x3 storyboard master.\nThe reference image is the exact crop of the current panel.\nDo not re-invent the story, character, or setting.\n\nFrozen world:\n- Subject identity: 一只中等大小的柠檬，椭圆形，表皮真实粗糙，内部持续发出柔和稳定的黄绿色光晕，没有五官、没有四肢，不拟人化，只通过轻微倾斜、停顿和滚动表达情绪。\n- Setting: 城市街角的一家便利店门口，玻璃自动门、红蓝霓虹招牌、门楣白色顶灯、湿润柏油地面和浅浅水渍始终存在，店内能看到整齐货架和暖色荧光灯。\n- Time / atmosphere: 深夜，街道安静，空气微潮，刚下过雨或地面仍带湿意。\n- Visual style: 写实电影感短片风格，夜景高对比但不过曝，冷色街头霓虹与便利店暖白光形成反差，湿润地面倒影清晰，镜头语言克制流畅，浅景深与适度颗粒感并存，整体安静、诗意、孤独。\n- Consistency anchors: 便利店玻璃自动门、红蓝霓虹招牌和门口白色顶灯在全片中保持一致位置与外观。; 湿润地面上的倒影始终可见，柠檬自身的黄绿色发光与环境冷暖光持续共存。; 相同的面部特征或物种特征\n- Strict negatives: 不要把柠檬改成卡通角色，不要出现五官、手脚、衣物或夸张表情。; 不要更换到其他地点、白天场景或完全不同的天气，不要引入新的主要角色抢占主体。; 不要更换角色\n\nCurrent shot objective:\n- Goal: 制造门前临近感与内外空间对照。\n- Narrative beat: 它来到玻璃门前，第一次在门上看见自己的发光倒影。\n- Camera: 正面中近景，镜头置于玻璃门外，轻微下俯，构图让柠檬与玻璃反射同时出现。\n- Frame intent: 柠檬停在门前中央偏下位置，玻璃门里外叠映出它的光点，店内整齐货架与暖色灯光透过玻璃显现，门框线条稳定。\n- Motion extension: 柠檬停止滚动，轻轻晃动一下后稳定下来，玻璃上的反光随门内灯闪动微微变化。\n\nExecution rules:\n- Make the clip look like this exact panel has come to life.\n- Keep the same subject identity and same visual anchors.\n- Keep the same setting and world state unless the panel itself already shows the change.\n- The clip may extend motion, expression, and camera movement, but may not swap the subject or reset the scene."
+    },
+    {
+      "id": "shot_06",
+      "grid_index": 6,
+      "goal": "推进到门将开启的临界点。",
+      "narrative_beat": "它再向前轻轻靠近，像是在试探玻璃门会不会回应它。",
+      "camera": "超低机位近景，从柠檬前方略偏侧拍摄，门缝区域占据背景中心，镜头缓慢后退给出空间。",
+      "frame_description": "柠檬在前景慢慢逼近镜头，后方是玻璃自动门的中缝与门内暖白光，门边金属框与贴纸细节可见。",
+      "motion_extension": "柠檬向前再滚半圈，自动门感应前的静默被拉长，空气像暂停了一瞬。",
+      "qa_focus": [
+        "临界等待感是否成立",
+        "自动门结构是否清晰可信"
+      ],
+      "duration_seconds": 4,
+      "video_prompt": "You are a strict shot-execution video director.\nThis clip is shot_06 from a locked 3x3 storyboard master.\nThe reference image is the exact crop of the current panel.\nDo not re-invent the story, character, or setting.\n\nFrozen world:\n- Subject identity: 一只中等大小的柠檬，椭圆形，表皮真实粗糙，内部持续发出柔和稳定的黄绿色光晕，没有五官、没有四肢，不拟人化，只通过轻微倾斜、停顿和滚动表达情绪。\n- Setting: 城市街角的一家便利店门口，玻璃自动门、红蓝霓虹招牌、门楣白色顶灯、湿润柏油地面和浅浅水渍始终存在，店内能看到整齐货架和暖色荧光灯。\n- Time / atmosphere: 深夜，街道安静，空气微潮，刚下过雨或地面仍带湿意。\n- Visual style: 写实电影感短片风格，夜景高对比但不过曝，冷色街头霓虹与便利店暖白光形成反差，湿润地面倒影清晰，镜头语言克制流畅，浅景深与适度颗粒感并存，整体安静、诗意、孤独。\n- Consistency anchors: 便利店玻璃自动门、红蓝霓虹招牌和门口白色顶灯在全片中保持一致位置与外观。; 湿润地面上的倒影始终可见，柠檬自身的黄绿色发光与环境冷暖光持续共存。; 相同的面部特征或物种特征\n- Strict negatives: 不要把柠檬改成卡通角色，不要出现五官、手脚、衣物或夸张表情。; 不要更换到其他地点、白天场景或完全不同的天气，不要引入新的主要角色抢占主体。; 不要更换角色\n\nCurrent shot objective:\n- Goal: 推进到门将开启的临界点。\n- Narrative beat: 它再向前轻轻靠近，像是在试探玻璃门会不会回应它。\n- Camera: 超低机位近景，从柠檬前方略偏侧拍摄，门缝区域占据背景中心，镜头缓慢后退给出空间。\n- Frame intent: 柠檬在前景慢慢逼近镜头，后方是玻璃自动门的中缝与门内暖白光，门边金属框与贴纸细节可见。\n- Motion extension: 柠檬向前再滚半圈，自动门感应前的静默被拉长，空气像暂停了一瞬。\n\nExecution rules:\n- Make the clip look like this exact panel has come to life.\n- Keep the same subject identity and same visual anchors.\n- Keep the same setting and world state unless the panel itself already shows the change.\n- The clip may extend motion, expression, and camera movement, but may not swap the subject or reset the scene."
+    },
+    {
+      "id": "shot_07",
+      "grid_index": 7,
+      "goal": "完成外部动作的回应。",
+      "narrative_beat": "自动门缓缓滑开，暖光涌出，柠檬被包围在新的光线里。",
+      "camera": "中景正面固定镜头，门在画面中轴线打开，强调空间变化而非镜头炫技。",
+      "frame_description": "玻璃自动门向两侧滑开，店内暖白光洒到门口湿地上，柠檬停在门槛前，黄绿色自发光被暖光包住，形成冷暖交汇。",
+      "motion_extension": "门平稳向两侧开启，地面倒影被拉亮，柠檬不急着进入，只微微前倾。",
+      "qa_focus": [
+        "门开启是否自然顺滑",
+        "冷暖光交汇是否成为明确视觉重点"
+      ],
+      "duration_seconds": 4,
+      "video_prompt": "You are a strict shot-execution video director.\nThis clip is shot_07 from a locked 3x3 storyboard master.\nThe reference image is the exact crop of the current panel.\nDo not re-invent the story, character, or setting.\n\nFrozen world:\n- Subject identity: 一只中等大小的柠檬，椭圆形，表皮真实粗糙，内部持续发出柔和稳定的黄绿色光晕，没有五官、没有四肢，不拟人化，只通过轻微倾斜、停顿和滚动表达情绪。\n- Setting: 城市街角的一家便利店门口，玻璃自动门、红蓝霓虹招牌、门楣白色顶灯、湿润柏油地面和浅浅水渍始终存在，店内能看到整齐货架和暖色荧光灯。\n- Time / atmosphere: 深夜，街道安静，空气微潮，刚下过雨或地面仍带湿意。\n- Visual style: 写实电影感短片风格，夜景高对比但不过曝，冷色街头霓虹与便利店暖白光形成反差，湿润地面倒影清晰，镜头语言克制流畅，浅景深与适度颗粒感并存，整体安静、诗意、孤独。\n- Consistency anchors: 便利店玻璃自动门、红蓝霓虹招牌和门口白色顶灯在全片中保持一致位置与外观。; 湿润地面上的倒影始终可见，柠檬自身的黄绿色发光与环境冷暖光持续共存。; 相同的面部特征或物种特征\n- Strict negatives: 不要把柠檬改成卡通角色，不要出现五官、手脚、衣物或夸张表情。; 不要更换到其他地点、白天场景或完全不同的天气，不要引入新的主要角色抢占主体。; 不要更换角色\n\nCurrent shot objective:\n- Goal: 完成外部动作的回应。\n- Narrative beat: 自动门缓缓滑开，暖光涌出，柠檬被包围在新的光线里。\n- Camera: 中景正面固定镜头，门在画面中轴线打开，强调空间变化而非镜头炫技。\n- Frame intent: 玻璃自动门向两侧滑开，店内暖白光洒到门口湿地上，柠檬停在门槛前，黄绿色自发光被暖光包住，形成冷暖交汇。\n- Motion extension: 门平稳向两侧开启，地面倒影被拉亮，柠檬不急着进入，只微微前倾。\n\nExecution rules:\n- Make the clip look like this exact panel has come to life.\n- Keep the same subject identity and same visual anchors.\n- Keep the same setting and world state unless the panel itself already shows the change.\n- The clip may extend motion, expression, and camera movement, but may not swap the subject or reset the scene."
+    },
+    {
+      "id": "shot_08",
+      "grid_index": 8,
+      "goal": "让主角做出最终靠近选择。",
+      "narrative_beat": "它越过门槛，缓慢滚进店内一点点，仍回望着外面的霓虹。",
+      "camera": "门内侧反打中景，镜头位于便利店内，朝外拍摄，柠檬从外向内进入画面，背景仍能看见夜色霓虹。",
+      "frame_description": "前景是店内浅色地砖与货架边缘，柠檬刚越过门槛停在暖光里，身后玻璃门外仍有红蓝霓虹与湿地倒影，内外世界同时被保留。",
+      "motion_extension": "柠檬慢慢滚入门内后停下，略微转向门外，像最后看一眼霓虹，门保持开启状态。",
+      "qa_focus": [
+        "内外空间是否连续无跳变",
+        "柠檬是否仍是唯一明确主角"
+      ],
+      "duration_seconds": 4,
+      "video_prompt": "You are a strict shot-execution video director.\nThis clip is shot_08 from a locked 3x3 storyboard master.\nThe reference image is the exact crop of the current panel.\nDo not re-invent the story, character, or setting.\n\nFrozen world:\n- Subject identity: 一只中等大小的柠檬，椭圆形，表皮真实粗糙，内部持续发出柔和稳定的黄绿色光晕，没有五官、没有四肢，不拟人化，只通过轻微倾斜、停顿和滚动表达情绪。\n- Setting: 城市街角的一家便利店门口，玻璃自动门、红蓝霓虹招牌、门楣白色顶灯、湿润柏油地面和浅浅水渍始终存在，店内能看到整齐货架和暖色荧光灯。\n- Time / atmosphere: 深夜，街道安静，空气微潮，刚下过雨或地面仍带湿意。\n- Visual style: 写实电影感短片风格，夜景高对比但不过曝，冷色街头霓虹与便利店暖白光形成反差，湿润地面倒影清晰，镜头语言克制流畅，浅景深与适度颗粒感并存，整体安静、诗意、孤独。\n- Consistency anchors: 便利店玻璃自动门、红蓝霓虹招牌和门口白色顶灯在全片中保持一致位置与外观。; 湿润地面上的倒影始终可见，柠檬自身的黄绿色发光与环境冷暖光持续共存。; 相同的面部特征或物种特征\n- Strict negatives: 不要把柠檬改成卡通角色，不要出现五官、手脚、衣物或夸张表情。; 不要更换到其他地点、白天场景或完全不同的天气，不要引入新的主要角色抢占主体。; 不要更换角色\n\nCurrent shot objective:\n- Goal: 让主角做出最终靠近选择。\n- Narrative beat: 它越过门槛，缓慢滚进店内一点点，仍回望着外面的霓虹。\n- Camera: 门内侧反打中景，镜头位于便利店内，朝外拍摄，柠檬从外向内进入画面，背景仍能看见夜色霓虹。\n- Frame intent: 前景是店内浅色地砖与货架边缘，柠檬刚越过门槛停在暖光里，身后玻璃门外仍有红蓝霓虹与湿地倒影，内外世界同时被保留。\n- Motion extension: 柠檬慢慢滚入门内后停下，略微转向门外，像最后看一眼霓虹，门保持开启状态。\n\nExecution rules:\n- Make the clip look like this exact panel has come to life.\n- Keep the same subject identity and same visual anchors.\n- Keep the same setting and world state unless the panel itself already shows the change.\n- The clip may extend motion, expression, and camera movement, but may not swap the subject or reset the scene."
+    },
+    {
+      "id": "shot_09",
+      "grid_index": 9,
+      "goal": "以安静的情绪收束短片。",
+      "narrative_beat": "在门口内侧的暖光中，它停住，头顶霓虹倒影还留在表皮上，像把夜色带了进来。",
+      "camera": "静止特写，镜头略高于柠檬，缓慢极轻推近，背景虚化成店内暖色与门外冷色的混合光斑。",
+      "frame_description": "柠檬安静地停在地砖上，表皮同时映着暖白和微弱红蓝色，光晕稳定柔和，背景只保留模糊门框、货架与夜色痕迹，情绪沉静。",
+      "motion_extension": "镜头最后轻轻推近，柠檬完全静止，环境光维持微弱闪动，在克制中结束。",
+      "qa_focus": [
+        "结尾是否延续同一空间与同一主体",
+        "情绪是否收束为安静、电影感的短片结尾"
+      ],
+      "duration_seconds": 4,
+      "video_prompt": "You are a strict shot-execution video director.\nThis clip is shot_09 from a locked 3x3 storyboard master.\nThe reference image is the exact crop of the current panel.\nDo not re-invent the story, character, or setting.\n\nFrozen world:\n- Subject identity: 一只中等大小的柠檬，椭圆形，表皮真实粗糙，内部持续发出柔和稳定的黄绿色光晕，没有五官、没有四肢，不拟人化，只通过轻微倾斜、停顿和滚动表达情绪。\n- Setting: 城市街角的一家便利店门口，玻璃自动门、红蓝霓虹招牌、门楣白色顶灯、湿润柏油地面和浅浅水渍始终存在，店内能看到整齐货架和暖色荧光灯。\n- Time / atmosphere: 深夜，街道安静，空气微潮，刚下过雨或地面仍带湿意。\n- Visual style: 写实电影感短片风格，夜景高对比但不过曝，冷色街头霓虹与便利店暖白光形成反差，湿润地面倒影清晰，镜头语言克制流畅，浅景深与适度颗粒感并存，整体安静、诗意、孤独。\n- Consistency anchors: 便利店玻璃自动门、红蓝霓虹招牌和门口白色顶灯在全片中保持一致位置与外观。; 湿润地面上的倒影始终可见，柠檬自身的黄绿色发光与环境冷暖光持续共存。; 相同的面部特征或物种特征\n- Strict negatives: 不要把柠檬改成卡通角色，不要出现五官、手脚、衣物或夸张表情。; 不要更换到其他地点、白天场景或完全不同的天气，不要引入新的主要角色抢占主体。; 不要更换角色\n\nCurrent shot objective:\n- Goal: 以安静的情绪收束短片。\n- Narrative beat: 在门口内侧的暖光中，它停住，头顶霓虹倒影还留在表皮上，像把夜色带了进来。\n- Camera: 静止特写，镜头略高于柠檬，缓慢极轻推近，背景虚化成店内暖色与门外冷色的混合光斑。\n- Frame intent: 柠檬安静地停在地砖上，表皮同时映着暖白和微弱红蓝色，光晕稳定柔和，背景只保留模糊门框、货架与夜色痕迹，情绪沉静。\n- Motion extension: 镜头最后轻轻推近，柠檬完全静止，环境光维持微弱闪动，在克制中结束。\n\nExecution rules:\n- Make the clip look like this exact panel has come to life.\n- Keep the same subject identity and same visual anchors.\n- Keep the same setting and world state unless the panel itself already shows the change.\n- The clip may extend motion, expression, and camera movement, but may not swap the subject or reset the scene."
+    }
+  ],
+  "storyboard_grid_prompt": "You are a professional film storyboard artist.\nGenerate one single 3x3 storyboard master image on a landscape canvas.\nThis is one image, not nine separate images.\nThe 3x3 grid must read from top-left to bottom-right as the exact playback order.\nAll nine panels must be tightly packed with no gaps, no gutters, no white margin, and no divider lines.\nEach panel must be the same size and clearly part of one continuous story.\n\nConsistency requirements:\n- Frozen subject identity: 一只中等大小的柠檬，椭圆形，表皮真实粗糙，内部持续发出柔和稳定的黄绿色光晕，没有五官、没有四肢，不拟人化，只通过轻微倾斜、停顿和滚动表达情绪。\n- Frozen setting: 城市街角的一家便利店门口，玻璃自动门、红蓝霓虹招牌、门楣白色顶灯、湿润柏油地面和浅浅水渍始终存在，店内能看到整齐货架和暖色荧光灯。\n- Frozen time / atmosphere: 深夜，街道安静，空气微潮，刚下过雨或地面仍带湿意。\n- Visual style: 写实电影感短片风格，夜景高对比但不过曝，冷色街头霓虹与便利店暖白光形成反差，湿润地面倒影清晰，镜头语言克制流畅，浅景深与适度颗粒感并存，整体安静、诗意、孤独。\n- Identity anchors: 便利店玻璃自动门、红蓝霓虹招牌和门口白色顶灯在全片中保持一致位置与外观。; 湿润地面上的倒影始终可见，柠檬自身的黄绿色发光与环境冷暖光持续共存。; 相同的面部特征或物种特征\n- Negative constraints: 不要把柠檬改成卡通角色，不要出现五官、手脚、衣物或夸张表情。; 不要更换到其他地点、白天场景或完全不同的天气，不要引入新的主要角色抢占主体。; 不要更换角色\n- Only camera angle, framing, expression, pose, and action progression may change between panels.\n- Do not change face, species, costume, pattern, accessory, body proportion, or world style across panels.\n- Do not add text, subtitles, numbers, labels, or decorative borders.\n\nNarrative panel plan:\nPanel 1: 广角低机位远景，镜头贴近湿润地面，缓慢向前推近，保留整家便利店门头与一小段空街道。; 画面下方偏左是一只发出柔和黄绿色光的柠檬，前方是便利店玻璃门，头顶红蓝霓虹与白色顶灯一起照亮湿地，倒影被拉长，街道空荡。; purpose: 建立夜晚便利店门口与主角的存在。.\nPanel 2: 中近景低角度，镜头从柠檬侧后方拍摄，轻微上摇，把柠檬与门头霓虹连接在同一构图里。; 柠檬位于画面前景，表皮纹理清晰，前端略微抬起，背景是便利店招牌与闪烁霓虹，冷色光压在夜空里。; purpose: 让观众感到柠檬正在被上方霓虹吸引。.\nPanel 3: 特写，镜头正对柠檬上半部，浅景深，背景霓虹化为柔散光斑，轻微环绕半步。; 柠檬占据大部分画面，粗糙表皮上滚动着红蓝反射，自身黄绿色内光稳定透出，后方霓虹虚化成诗意色块。; purpose: 强调霓虹对柠檬情绪的影响。.\nPanel 4: 侧向跟拍中景，镜头与柠檬平行移动，保持低机位，速度克制。; 柠檬从左向右缓慢滚过湿润地面，画面后方始终带着玻璃门和门侧灯箱，倒影被拖成一条细长光带。; purpose: 从观察过渡到行动。.\nPanel 5: 正面中近景，镜头置于玻璃门外，轻微下俯，构图让柠檬与玻璃反射同时出现。; 柠檬停在门前中央偏下位置，玻璃门里外叠映出它的光点，店内整齐货架与暖色灯光透过玻璃显现，门框线条稳定。; purpose: 制造门前临近感与内外空间对照。.\nPanel 6: 超低机位近景，从柠檬前方略偏侧拍摄，门缝区域占据背景中心，镜头缓慢后退给出空间。; 柠檬在前景慢慢逼近镜头，后方是玻璃自动门的中缝与门内暖白光，门边金属框与贴纸细节可见。; purpose: 推进到门将开启的临界点。.\nPanel 7: 中景正面固定镜头，门在画面中轴线打开，强调空间变化而非镜头炫技。; 玻璃自动门向两侧滑开，店内暖白光洒到门口湿地上，柠檬停在门槛前，黄绿色自发光被暖光包住，形成冷暖交汇。; purpose: 完成外部动作的回应。.\nPanel 8: 门内侧反打中景，镜头位于便利店内，朝外拍摄，柠檬从外向内进入画面，背景仍能看见夜色霓虹。; 前景是店内浅色地砖与货架边缘，柠檬刚越过门槛停在暖光里，身后玻璃门外仍有红蓝霓虹与湿地倒影，内外世界同时被保留。; purpose: 让主角做出最终靠近选择。.\nPanel 9: 静止特写，镜头略高于柠檬，缓慢极轻推近，背景虚化成店内暖色与门外冷色的混合光斑。; 柠檬安静地停在地砖上，表皮同时映着暖白和微弱红蓝色，光晕稳定柔和，背景只保留模糊门框、货架与夜色痕迹，情绪沉静。; purpose: 以安静的情绪收束短片。."
+}

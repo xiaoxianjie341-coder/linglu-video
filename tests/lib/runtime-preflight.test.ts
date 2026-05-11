@@ -2,13 +2,13 @@ import { describe, expect, it } from "vitest";
 import { resolveRuntimePreflight } from "../../lib/runtime-preflight";
 
 describe("runtime preflight", () => {
-  it("blocks generation when the OpenAI execution chain is unavailable", () => {
+  it("allows generation through Linglu when the OpenAI execution chain is unavailable", () => {
     const result = resolveRuntimePreflight(
       {
         openaiApiKey: "",
         plannerProvider: "linglu",
         lingluApiKey: "ll-test-123",
-        lingluBaseUrl: "https://gateway.linglu.ai/v1",
+        lingluBaseUrl: "https://test.linglu.ai/v1",
         klingApiKey: "",
         klingBaseUrl: "",
         jimengApiKey: "",
@@ -18,13 +18,16 @@ describe("runtime preflight", () => {
       {},
     );
 
-    expect(result.canGenerate).toBe(false);
-    expect(result.canGenerateImage).toBe(false);
-    expect(result.blockingReason).toContain("OpenAI");
-    expect(result.imageBlockingReason).toContain("OpenAI");
+    expect(result.plannerReady).toBe(true);
+    expect(result.storyboardImageReady).toBe(true);
+    expect(result.canGenerate).toBe(true);
+    expect(result.canGenerateImage).toBe(true);
+    expect(result.availableVideoProviders).toEqual(["linglu"]);
+    expect(result.blockingReason).toBeNull();
+    expect(result.imageBlockingReason).toBeNull();
   });
 
-  it("still blocks generation when linglu is configured but the real planner chain is not executable", () => {
+  it("allows generation when linglu planner is configured and the OpenAI media chain remains available", () => {
     const result = resolveRuntimePreflight(
       {
         openaiApiKey: "sk-test-123",
@@ -40,10 +43,10 @@ describe("runtime preflight", () => {
       {},
     );
 
-    expect(result.plannerReady).toBe(false);
-    expect(result.canGenerate).toBe(false);
+    expect(result.plannerReady).toBe(true);
+    expect(result.canGenerate).toBe(true);
     expect(result.canGenerateImage).toBe(true);
-    expect(result.blockingReason).toContain("当前规划器链路仅支持 OpenAI");
+    expect(result.blockingReason).toBeNull();
   });
 
   it("only exposes implemented video providers on the homepage", () => {
@@ -65,7 +68,7 @@ describe("runtime preflight", () => {
     expect(result.availableVideoProviders).toEqual(["openai"]);
   });
 
-  it("keeps image generation available when only the video planner chain is blocked", () => {
+  it("keeps image generation available when linglu planner is selected for image workflows", () => {
     const result = resolveRuntimePreflight(
       {
         openaiApiKey: "sk-test-123",
@@ -87,8 +90,9 @@ describe("runtime preflight", () => {
       {},
     );
 
-    expect(result.canGenerate).toBe(false);
+    expect(result.canGenerate).toBe(true);
     expect(result.canGenerateImage).toBe(true);
     expect(result.imageBlockingReason).toBeNull();
+    expect(result.blockingReason).toBeNull();
   });
 });

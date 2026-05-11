@@ -1,6 +1,7 @@
 import type { GenerationRequest, RuntimePreflight, StoredSettings } from "./schemas";
 import { runtimePreflightSchema } from "./schemas";
 import { readSettings } from "./storage";
+import { resolveImageGenerationRuntime, resolvePlannerRuntime } from "./openai/client";
 import {
   VIDEO_PROVIDER_IDS,
   type VideoProviderId,
@@ -9,8 +10,6 @@ import { resolveVideoProviderRuntime } from "./video-providers/runtime";
 
 const OPENAI_MISSING_MESSAGE =
   "还没有配置 OpenAI API Key，请先在设置页保存，或设置 OPENAI_API_KEY 环境变量。";
-const LINGLU_BLOCKED_MESSAGE =
-  "当前规划器链路仅支持 OpenAI，灵鹿已预留但暂不可执行。";
 type VideoPreflightRequest = {
   generationMode?: "video";
   videoProvider?: VideoProviderId;
@@ -23,16 +22,34 @@ type PreflightRequest =
   | undefined;
 
 function getProviderLabel(provider: VideoProviderId): string {
+  if (provider === "linglu") return "灵路";
   if (provider === "openai") return "OpenAI";
   if (provider === "kling") return "Kling";
   return "即梦";
 }
 
-function canUseOpenAIMedia(
-  settings: Pick<StoredSettings, "openaiApiKey">,
+function canResolveImageRuntime(
+  settings: StoredSettings,
   env: NodeJS.ProcessEnv,
 ): boolean {
-  return Boolean(settings.openaiApiKey || env.OPENAI_API_KEY);
+  try {
+    resolveImageGenerationRuntime(settings, env);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function canResolvePlannerRuntime(
+  settings: StoredSettings,
+  env: NodeJS.ProcessEnv,
+): boolean {
+  try {
+    resolvePlannerRuntime(settings, env);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function resolveImplementedVideoProviders(
@@ -79,9 +96,9 @@ export function resolveRuntimePreflight(
   request?: PreflightRequest,
   env: NodeJS.ProcessEnv = process.env,
 ): RuntimePreflight {
-  const imageReady = canUseOpenAIMedia(settings, env);
+  const imageReady = canResolveImageRuntime(settings, env);
   const storyboardImageReady = imageReady;
-  const plannerReady = settings.plannerProvider === "openai" && imageReady;
+  const plannerReady = canResolvePlannerRuntime(settings, env);
   const availableVideoProviders = resolveImplementedVideoProviders(settings, env);
   const videoRequest =
     !request || request.generationMode !== "image" ? request : undefined;
@@ -90,14 +107,19 @@ export function resolveRuntimePreflight(
     videoRequest,
     env,
   );
-  const imageBlockingReason = imageReady ? null : OPENAI_MISSING_MESSAGE;
+  const imageBlockingReason = imageReady
+    ? null
+    : settings.plannerProvider === "linglu"
+      ? "还没有配置灵路运行时信息，请先保存灵路配置或设置 LINGLU_API_KEY。"
+      : OPENAI_MISSING_MESSAGE;
 
   let blockingReason: string | null = null;
 
   if (!imageReady) {
-    blockingReason = OPENAI_MISSING_MESSAGE;
-  } else if (settings.plannerProvider !== "openai") {
-    blockingReason = LINGLU_BLOCKED_MESSAGE;
+    blockingReason = imageBlockingReason;
+  } else if (!plannerReady) {
+    blockingReason =
+      "还没有配置灵路运行时信息，请先保存灵路配置或设置 LINGLU_API_KEY。";
   } else if (requestedProviderBlockingReason) {
     blockingReason = requestedProviderBlockingReason;
   } else if (availableVideoProviders.length === 0) {

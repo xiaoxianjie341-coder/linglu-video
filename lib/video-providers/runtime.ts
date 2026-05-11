@@ -4,6 +4,8 @@ import { getDefaultVideoModel, type VideoProviderId } from "./catalog";
 type VideoSettings = Pick<
   StoredSettings,
   | "openaiApiKey"
+  | "lingluApiKey"
+  | "lingluBaseUrl"
   | "klingApiKey"
   | "klingBaseUrl"
   | "jimengApiKey"
@@ -43,6 +45,24 @@ export function resolveVideoProviderRuntime(
     return {
       provider,
       apiKey,
+      model,
+      implemented: true,
+    };
+  }
+
+  if (provider === "linglu") {
+    const apiKey = settings.lingluApiKey || env.LINGLU_API_KEY;
+
+    if (!apiKey) {
+      throw new Error(
+        "还没有配置灵路 API Key，请先在设置页保存，或设置 LINGLU_API_KEY 环境变量。",
+      );
+    }
+
+    return {
+      provider,
+      apiKey,
+      baseURL: settings.lingluBaseUrl || env.LINGLU_BASE_URL || undefined,
       model,
       implemented: true,
     };

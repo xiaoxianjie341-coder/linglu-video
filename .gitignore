@@ -16,5 +16,6 @@ preview/
 preferences.json
 tsconfig.tsbuildinfo
 data/settings.json
+data/linglu-control-plane-session.json
 data/runs/*
 !data/runs/.gitkeep

@@ -42,14 +42,20 @@ export function SettingsForm({
   const [jimengBaseUrl, setJimengBaseUrl] = useState(initialSettings.jimengBaseUrl);
   const [plannerProvider, setPlannerProvider] =
     useState<PlannerProvider>(initialSettings.plannerProvider);
+  const [savedPlannerProvider, setSavedPlannerProvider] =
+    useState<PlannerProvider>(initialSettings.plannerProvider);
   const [lingluApiKey, setLingluApiKey] = useState("");
   const [hasSavedLingluKey, setHasSavedLingluKey] = useState(
     initialSettings.hasLingluKey,
   );
   const [lingluBaseUrl, setLingluBaseUrl] = useState(initialSettings.lingluBaseUrl);
+  const [savedLingluBaseUrl, setSavedLingluBaseUrl] = useState(initialSettings.lingluBaseUrl);
   const [runtime, setRuntime] = useState(runtimePreflight);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+
+  const [savedKlingBaseUrl, setSavedKlingBaseUrl] = useState(initialSettings.klingBaseUrl);
+  const [savedJimengBaseUrl, setSavedJimengBaseUrl] = useState(initialSettings.jimengBaseUrl);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -118,7 +124,11 @@ export function SettingsForm({
       setJimengBaseUrl(data.jimengBaseUrl || "");
       setHasSavedLingluKey(Boolean(data.hasLingluKey));
       setPlannerProvider((data.plannerProvider as PlannerProvider) || "openai");
+      setSavedPlannerProvider((data.plannerProvider as PlannerProvider) || "openai");
       setLingluBaseUrl(data.lingluBaseUrl || "https://gateway.linglu.ai/v1");
+      setSavedLingluBaseUrl(data.lingluBaseUrl || "https://gateway.linglu.ai/v1");
+      setSavedKlingBaseUrl(data.klingBaseUrl || "");
+      setSavedJimengBaseUrl(data.jimengBaseUrl || "");
       setRuntime(data.runtimePreflight ?? runtimePreflight);
       setOpenaiApiKey("");
       setKlingApiKey("");
@@ -135,24 +145,42 @@ export function SettingsForm({
   const hasOpenAiCandidate = hasSavedOpenAiKey || Boolean(openaiApiKey.trim());
   const hasLingluCandidate = hasSavedLingluKey || Boolean(lingluApiKey.trim());
   const canSave =
-    hasOpenAiCandidate &&
-    (plannerProvider === "openai" ||
-      (hasLingluCandidate && Boolean(lingluBaseUrl.trim())));
+    plannerProvider === "openai"
+      ? hasOpenAiCandidate
+      : hasLingluCandidate && Boolean(lingluBaseUrl.trim());
+
+  const isDirty =
+    openaiApiKey !== "" ||
+    klingApiKey !== "" ||
+    jimengApiKey !== "" ||
+    lingluApiKey !== "" ||
+    plannerProvider !== savedPlannerProvider ||
+    klingBaseUrl !== savedKlingBaseUrl ||
+    jimengBaseUrl !== savedJimengBaseUrl ||
+    lingluBaseUrl !== savedLingluBaseUrl;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       <div
         className={`rounded-[28px] border px-5 py-4 text-sm leading-6 ${
-          runtime.canGenerate
-            ? "border-[color:var(--success)]/20 bg-[color:var(--success-soft)] text-[color:var(--ink-900)]"
-            : "border-[color:var(--danger)]/20 bg-[color:var(--danger-soft)] text-[color:var(--ink-900)]"
+          isDirty
+            ? "border-[color:var(--accent)]/20 bg-[color:var(--accent-soft)] text-[color:var(--ink-900)]"
+            : runtime.canGenerate
+              ? "border-[color:var(--success)]/20 bg-[color:var(--success-soft)] text-[color:var(--ink-900)]"
+              : "border-[color:var(--danger)]/20 bg-[color:var(--danger-soft)] text-[color:var(--ink-900)]"
         }`}
       >
         <span className="font-semibold">
-          {runtime.canGenerate ? "当前已可开始生成。" : "暂时无法开始生成。"}
+          {isDirty
+            ? "配置已修改。"
+            : runtime.canGenerate
+              ? "当前已可开始生成。"
+              : "暂时无法开始生成。"}
         </span>
         <span className="ml-2">
-          {runtime.blockingReason || "当前配置已经可以正常使用。"}
+          {isDirty
+            ? "请点击保存以应用新设置。"
+            : runtime.blockingReason || "当前配置已经可以正常使用。"}
         </span>
       </div>
 
@@ -179,7 +207,7 @@ export function SettingsForm({
       <SettingsSectionCard
         title="故事服务"
         description="用于整理故事方向和内容结构。"
-        badge={plannerProvider === "openai" ? "当前使用 OpenAI" : "已切换到灵鹿"}
+        badge={plannerProvider === "openai" ? "当前使用 OpenAI" : "已切换到灵路"}
       >
         <label className="block">
           <span className="mb-3 block text-sm font-medium text-[color:var(--ink-900)]">
@@ -191,19 +219,19 @@ export function SettingsForm({
             onChange={(event) => setPlannerProvider(event.target.value as PlannerProvider)}
           >
             <option value="openai">官方 OpenAI</option>
-            <option value="linglu">灵鹿</option>
+            <option value="linglu">灵路</option>
           </select>
         </label>
 
         {plannerProvider === "linglu" ? (
           <div className="mt-4 space-y-4">
             <div className="rounded-[22px] border border-[color:var(--danger)]/20 bg-[color:var(--danger-soft)] px-4 py-3 text-sm text-[color:var(--ink-900)]">
-              当前版本会先保存灵鹿配置，实际创作仍以 OpenAI 为主。
+              灵路模式会接管规划、生图和可用的视频生成链路。
             </div>
 
             <label className="block">
               <span className="mb-3 block text-sm font-medium text-[color:var(--ink-900)]">
-                灵鹿运行时 API Key
+                灵路运行时 API Key
               </span>
               <input
                 type="password"
@@ -218,7 +246,7 @@ export function SettingsForm({
 
             <label className="block">
               <span className="mb-3 block text-sm font-medium text-[color:var(--ink-900)]">
-                灵鹿 Base URL
+                灵路 Base URL
               </span>
               <input
                 type="text"

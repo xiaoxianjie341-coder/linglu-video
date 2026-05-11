@@ -13,6 +13,18 @@ describe("Video provider execution guard", () => {
     ).not.toThrow();
   });
 
+  it("allows the Linglu provider to execute", () => {
+    expect(() =>
+      assertVideoProviderImplemented({
+        provider: "linglu",
+        apiKey: "ll-test-123",
+        baseURL: "https://test.linglu.ai/v1",
+        model: "gpt-image-1",
+        implemented: true,
+      }),
+    ).not.toThrow();
+  });
+
   it("throws a clear message for a prewired but unimplemented Kling adapter", () => {
     expect(() =>
       assertVideoProviderImplemented({

@@ -46,6 +46,29 @@ describe("Video provider runtime", () => {
     });
   });
 
+  it("resolves an implemented Linglu video runtime from saved settings", () => {
+    const runtime = resolveVideoProviderRuntime(
+      {
+        openaiApiKey: "",
+        lingluApiKey: "ll-test-123",
+        lingluBaseUrl: "https://test.linglu.ai/v1",
+      },
+      {
+        videoProvider: "linglu",
+        videoModel: "gpt-image-1",
+      },
+      {},
+    );
+
+    expect(runtime).toMatchObject({
+      provider: "linglu",
+      apiKey: "ll-test-123",
+      baseURL: "https://test.linglu.ai/v1",
+      model: "gpt-image-1",
+      implemented: true,
+    });
+  });
+
   it("falls back to environment variables for Jimeng", () => {
     const runtime = resolveVideoProviderRuntime(
       {

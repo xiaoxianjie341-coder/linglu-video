@@ -6,6 +6,9 @@ import { createProxyFetch, resolveOpenAIProxyUrl } from "./proxy";
 
 const proxyFetch = createProxyFetch();
 export const DEFAULT_LINGLU_BASE_URL = "https://gateway.linglu.ai/v1";
+export const DEFAULT_PLANNER_MODEL = "gpt-5.4";
+export const DEFAULT_OPENAI_IMAGE_MODEL = "gpt-image-1.5";
+export const DEFAULT_LINGLU_IMAGE_MODEL = "gpt-image-1";
 
 export interface OpenAITransport {
   apiKey: string;
@@ -18,7 +21,14 @@ export interface PlannerRuntime {
   provider: "openai" | "linglu";
   apiKey: string;
   apiMode: "responses" | "chat";
-  model: "gpt-5.4";
+  model: string;
+  baseURL?: string;
+}
+
+export interface ImageGenerationRuntime {
+  provider: "openai" | "linglu";
+  apiKey: string;
+  model: string;
   baseURL?: string;
 }
 
@@ -39,7 +49,7 @@ export function resolvePlannerRuntime(
 
     if (!apiKey) {
       throw new Error(
-        "还没有配置灵鹿运行时 API Key，请先在设置页保存，或设置 LINGLU_API_KEY 环境变量。",
+        "还没有配置灵路运行时 API Key，请先在设置页保存，或设置 LINGLU_API_KEY 环境变量。",
       );
     }
 
@@ -47,7 +57,7 @@ export function resolvePlannerRuntime(
       provider: "linglu",
       apiKey,
       apiMode: "chat",
-      model: "gpt-5.4",
+      model: env.LINGLU_PLANNER_MODEL || DEFAULT_PLANNER_MODEL,
       baseURL:
         settings.lingluBaseUrl ||
         env.LINGLU_BASE_URL ||
@@ -67,7 +77,49 @@ export function resolvePlannerRuntime(
     provider: "openai",
     apiKey,
     apiMode: "responses",
-    model: "gpt-5.4",
+    model: env.OPENAI_PLANNER_MODEL || DEFAULT_PLANNER_MODEL,
+  };
+}
+
+export function resolveImageGenerationRuntime(
+  settings: Pick<
+    StoredSettings,
+    "openaiApiKey" | "plannerProvider" | "lingluApiKey" | "lingluBaseUrl"
+  >,
+  env: NodeJS.ProcessEnv = process.env,
+): ImageGenerationRuntime {
+  if (settings.plannerProvider === "linglu") {
+    const apiKey = settings.lingluApiKey || env.LINGLU_API_KEY;
+
+    if (!apiKey) {
+      throw new Error(
+        "还没有配置灵路运行时 API Key，请先在设置页保存，或设置 LINGLU_API_KEY 环境变量。",
+      );
+    }
+
+    return {
+      provider: "linglu",
+      apiKey,
+      model: env.LINGLU_IMAGE_MODEL || DEFAULT_LINGLU_IMAGE_MODEL,
+      baseURL:
+        settings.lingluBaseUrl ||
+        env.LINGLU_BASE_URL ||
+        DEFAULT_LINGLU_BASE_URL,
+    };
+  }
+
+  const apiKey = settings.openaiApiKey || env.OPENAI_API_KEY;
+
+  if (!apiKey) {
+    throw new Error(
+      "还没有配置 OpenAI API Key，请先在设置页保存，或设置 OPENAI_API_KEY 环境变量。",
+    );
+  }
+
+  return {
+    provider: "openai",
+    apiKey,
+    model: env.OPENAI_IMAGE_MODEL || DEFAULT_OPENAI_IMAGE_MODEL,
   };
 }
 
@@ -130,6 +182,13 @@ export async function getOpenAIClient(baseDir?: string): Promise<OpenAI> {
 export async function getPlannerRuntime(baseDir?: string): Promise<PlannerRuntime> {
   const settings = await readSettings(baseDir);
   return resolvePlannerRuntime(settings);
+}
+
+export async function getImageGenerationRuntime(
+  baseDir?: string,
+): Promise<ImageGenerationRuntime> {
+  const settings = await readSettings(baseDir);
+  return resolveImageGenerationRuntime(settings);
 }
 
 export async function getPlannerClient(baseDir?: string): Promise<PlannerClient> {

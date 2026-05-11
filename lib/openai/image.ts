@@ -1,9 +1,10 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import sharp from "sharp";
+import { createLingluControlPlaneImageGeneration } from "../linglu-control-plane";
 import type { ImageAspect, PlannerOutput, StoryboardAsset } from "../schemas";
 import { getRunsDir, writeStoryboardArtifact } from "../storage";
-import { getOpenAIClient } from "./client";
+import { getImageGenerationRuntime, getOpenAIClient } from "./client";
 import { withOpenAIReconnectRetry } from "./retry";
 
 const VIDEO_FRAME_WIDTH = 720;
@@ -58,6 +59,58 @@ function resolveOpenAIImageSize(aspect: ImageAspect): "1024x1536" | "1024x1024" 
   return "1024x1536";
 }
 
+async function readImageResponseData(
+  data: Array<{ b64_json?: string | null; url?: string | null }> | undefined,
+): Promise<Buffer | null> {
+  const firstImage = data?.[0];
+
+  if (!firstImage) {
+    return null;
+  }
+
+  if (firstImage.b64_json) {
+    return Buffer.from(firstImage.b64_json, "base64");
+  }
+
+  if (firstImage.url) {
+    const response = await fetch(firstImage.url);
+
+    if (!response.ok) {
+      throw new Error(`图片结果下载失败（${response.status}）。`);
+    }
+
+    return Buffer.from(await response.arrayBuffer());
+  }
+
+  return null;
+}
+
+async function generateLingluImage({
+  prompt,
+  aspect,
+  baseDir,
+}: Pick<GenerateImageCandidateOptions, "prompt" | "aspect" | "baseDir">): Promise<Buffer> {
+  const runtime = await getImageGenerationRuntime(baseDir);
+
+  if (runtime.provider !== "linglu") {
+    throw new Error("当前图片运行时不是灵路。");
+  }
+
+  const payload = await createLingluControlPlaneImageGeneration({
+    model: runtime.model,
+    prompt,
+    size: resolveOpenAIImageSize(aspect),
+    baseDir,
+  });
+  const imageBuffer = await readImageResponseData(payload.data);
+
+  if (!imageBuffer) {
+    throw new Error("灵路图片生成没有返回图片数据。");
+  }
+
+  return imageBuffer;
+}
+
 async function normalizeGeneratedImage(
   source: Buffer,
   aspect: ImageAspect,
@@ -88,25 +141,35 @@ export async function generateImageCandidate({
   outputPath,
   baseDir,
 }: GenerateImageCandidateOptions): Promise<void> {
-  const image = await withOpenAIReconnectRetry(
-    `生成图片素材 ${index}`,
-    async () => getOpenAIClient(baseDir),
-    async (openai) =>
-      openai.images.generate({
-        model: "gpt-image-1.5",
-        prompt,
-        size: resolveOpenAIImageSize(aspect),
-      }),
-  );
+  const runtime = await getImageGenerationRuntime(baseDir);
+  const generatedImage =
+    runtime.provider === "linglu"
+      ? await generateLingluImage({ prompt, aspect, baseDir })
+      : await withOpenAIReconnectRetry(
+          `生成图片素材 ${index}`,
+          async () => getOpenAIClient(baseDir),
+          async (openai) => {
+            const image = await openai.images.generate({
+              model: runtime.model,
+              prompt,
+              size: resolveOpenAIImageSize(aspect),
+            });
+            const imageBuffer = await readImageResponseData(image.data);
 
-  const imageBase64 = image.data?.[0]?.b64_json;
+            if (!imageBuffer) {
+              throw new Error(`图片素材 ${index} 没有返回图片。`);
+            }
 
-  if (!imageBase64) {
+            return imageBuffer;
+          },
+        );
+
+  if (!generatedImage) {
     throw new Error(`图片素材 ${index} 没有返回图片。`);
   }
 
   const normalizedImage = await normalizeGeneratedImage(
-    Buffer.from(imageBase64, "base64"),
+    generatedImage,
     aspect,
   );
   await writeFile(outputPath, normalizedImage);

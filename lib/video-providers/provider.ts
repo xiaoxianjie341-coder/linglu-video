@@ -1,4 +1,5 @@
 import { readSettings } from "../storage";
+import { generateLingluVideoFromReference } from "./linglu";
 import { generateOpenAIVideoFromReference } from "./openai";
 import { resolveVideoProviderRuntime, type VideoProviderRuntime } from "./runtime";
 
@@ -9,13 +10,13 @@ export interface GenerateVideoFromReferenceOptions {
   referencePath: string;
   outputPath: string;
   clipSeconds: ClipSeconds;
-  videoProvider: "openai" | "kling" | "jimeng";
+  videoProvider: "linglu" | "openai" | "kling" | "jimeng";
   videoModel: string;
   baseDir?: string;
 }
 
 export interface GeneratedVideoArtifact {
-  provider: "openai" | "kling" | "jimeng";
+  provider: "linglu" | "openai" | "kling" | "jimeng";
   model: string;
   path: string;
   seconds: number;
@@ -30,6 +31,9 @@ function getVideoProviderLabel(provider: VideoProviderRuntime["provider"]): stri
   }
   if (provider === "jimeng") {
     return "即梦";
+  }
+  if (provider === "linglu") {
+    return "灵路";
   }
   return "OpenAI";
 }
@@ -60,14 +64,23 @@ export async function generateVideoFromReference(
 
   assertVideoProviderImplemented(runtime);
 
-  const artifact = await generateOpenAIVideoFromReference(
-    options.prompt,
-    options.referencePath,
-    options.outputPath,
-    options.clipSeconds,
-    runtime.model,
-    options.baseDir,
-  );
+  const artifact =
+    runtime.provider === "linglu"
+      ? await generateLingluVideoFromReference(
+          options.prompt,
+          options.referencePath,
+          options.outputPath,
+          options.clipSeconds,
+          runtime,
+        )
+      : await generateOpenAIVideoFromReference(
+          options.prompt,
+          options.referencePath,
+          options.outputPath,
+          options.clipSeconds,
+          runtime.model,
+          options.baseDir,
+        );
 
   return {
     provider: runtime.provider,

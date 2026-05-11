@@ -40,44 +40,6 @@ export function VideoResult({ runId, video }: VideoResultProps) {
             }`}
           />
         ) : null}
-
-        <div className="grid gap-4 md:grid-cols-4">
-          <div className="rounded-[24px] border border-[color:var(--line-soft)] bg-[color:var(--paper-soft)] p-4">
-            <p className="text-[11px] uppercase tracking-[0.2em] text-[color:var(--ink-500)]">
-              引擎
-            </p>
-            <p className="mt-2 text-sm text-[color:var(--ink-900)]">
-              {video.provider}
-            </p>
-          </div>
-
-          <div className="rounded-[24px] border border-[color:var(--line-soft)] bg-[color:var(--paper-soft)] p-4">
-            <p className="text-[11px] uppercase tracking-[0.2em] text-[color:var(--ink-500)]">
-              模型
-            </p>
-            <p className="mt-2 text-sm text-[color:var(--ink-900)]">
-              {video.model}
-            </p>
-          </div>
-
-          <div className="rounded-[24px] border border-[color:var(--line-soft)] bg-[color:var(--paper-soft)] p-4">
-            <p className="text-[11px] uppercase tracking-[0.2em] text-[color:var(--ink-500)]">
-              总时长
-            </p>
-            <p className="mt-2 text-sm text-[color:var(--ink-900)]">
-              {video.seconds}
-            </p>
-          </div>
-
-          <div className="rounded-[24px] border border-[color:var(--line-soft)] bg-[color:var(--paper-soft)] p-4">
-            <p className="text-[11px] uppercase tracking-[0.2em] text-[color:var(--ink-500)]">
-              分辨率
-            </p>
-            <p className="mt-2 break-all text-sm text-[color:var(--ink-900)]">
-              {video.size ?? "未知"}
-            </p>
-          </div>
-        </div>
       </div>
     </section>
   );

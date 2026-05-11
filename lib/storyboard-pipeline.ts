@@ -13,13 +13,16 @@ import sharp from "sharp";
 import { z } from "zod";
 import { fetchSourceContent } from "./fetch-source";
 import {
+  createLingluControlPlaneChatCompletion,
+  extractLingluChatCompletionText,
+} from "./linglu-control-plane";
+import {
   getOpenAIClient,
-  getOpenAITransport,
   getPlannerClient,
   getPlannerRuntime,
 } from "./openai/client";
-import { normalizeLandscapeStoryboardImage } from "./openai/image";
-import { withOpenAIReconnectRetry, withOpenAIRetry } from "./openai/retry";
+import { generateImageCandidate } from "./openai/image";
+import { withOpenAIReconnectRetry } from "./openai/retry";
 import { normalizeStringArray } from "./string-array";
 import { getDataDir } from "./storage";
 import {
@@ -29,8 +32,6 @@ import {
 import type { VideoProviderId } from "./video-providers/catalog";
 
 const execFileAsync = promisify(execFile);
-const VIDEO_POLL_INTERVAL_MS = 10_000;
-
 type SourceType = "text" | "url";
 type VideoModel = string;
 type ClipSeconds = 4 | 8 | 12;
@@ -163,23 +164,11 @@ interface Directories {
   manifests: string;
 }
 
-interface OpenAIVideoJob {
-  id?: string;
-  status?: string;
-  progress?: number;
-  error?: { message?: string | null } | null;
-  seconds?: string | number;
-}
-
 function normalizeClipSeconds(value: number | undefined): ClipSeconds {
   if (!value || Number.isNaN(value)) return 8;
   if (value <= 4) return 4;
   if (value <= 8) return 8;
   return 12;
-}
-
-function toVideoSecondsLiteral(seconds: ClipSeconds): "4" | "8" | "12" {
-  return String(seconds) as "4" | "8" | "12";
 }
 
 function stripCodeFences(value: string): string {
@@ -524,27 +513,47 @@ async function planStoryboard(
 ): Promise<ResolvedPlan> {
   const runtime = await getPlannerRuntime(baseDir);
   const prompt = buildPlannerPrompt(sourceContent, brandTone);
+  const rawText =
+    runtime.provider === "linglu"
+      ? extractLingluChatCompletionText(
+          await createLingluControlPlaneChatCompletion({
+            model: runtime.model,
+            messages: [{ role: "user", content: prompt }],
+            baseDir,
+          }),
+        )
+      : (
+          await withOpenAIReconnectRetry(
+            "分镜规划",
+            async () => getPlannerClient(baseDir),
+            async ({ client }) =>
+              client.responses.create({
+                model: runtime.model,
+                input: prompt,
+                reasoning: { effort: "medium" },
+                text: { verbosity: "low" },
+              }),
+          )
+        ).output_text;
 
-  if (runtime.apiMode === "chat") {
-    throw new Error("当前 storyboard planner 仅支持 responses 模式。");
+  if (!rawText) {
+    throw new Error("模型没有返回可用的分镜规划文本。");
   }
 
-  const rawText = (
-    await withOpenAIReconnectRetry(
-      "分镜规划",
-      async () => getPlannerClient(baseDir),
-      async ({ client }) =>
-        client.responses.create({
-          model: runtime.model,
-          input: prompt,
-          reasoning: { effort: "medium" },
-          text: { verbosity: "low" },
-        }),
-    )
-  ).output_text;
+  let plannerPayload: unknown;
+
+  try {
+    plannerPayload = extractJson(rawText);
+  } catch (error) {
+    const preview = rawText.replace(/\s+/g, " ").trim().slice(0, 600);
+    throw new Error(
+      `模型输出不是合法 JSON。原始返回片段: ${preview || "<empty>"}`,
+      { cause: error },
+    );
+  }
 
   const normalized = normalizePlannerOutput(
-    extractJson(rawText),
+    plannerPayload,
     brandTone,
     clipSeconds,
   );
@@ -557,25 +566,14 @@ async function generateStoryboardGrid(
   directories: Directories,
   baseDir?: string,
 ): Promise<string> {
-  const image = await withOpenAIReconnectRetry(
-    "生成 3x3 总分镜图",
-    async () => getOpenAIClient(baseDir),
-    async (openai) =>
-      openai.images.generate({
-        model: "gpt-image-1.5",
-        prompt: resolvedPlan.storyboard_grid_prompt,
-        size: "1536x1024",
-      }),
-  );
-
-  const imageBase64 = image.data?.[0]?.b64_json;
-
-  if (!imageBase64) {
-    throw new Error("3x3 总分镜没有返回图片数据。");
-  }
-
   const gridPath = join(directories.storyboard, "grid.png");
-  await writeFile(gridPath, Buffer.from(imageBase64, "base64"));
+  await generateImageCandidate({
+    index: 0,
+    prompt: resolvedPlan.storyboard_grid_prompt,
+    aspect: "landscape",
+    outputPath: gridPath,
+    baseDir,
+  });
   return gridPath;
 }
 
@@ -708,54 +706,6 @@ async function concatVideos(
   } finally {
     await unlink(concatListPath).catch(() => undefined);
   }
-}
-
-async function createLandscapeVideoJob(
-  prompt: string,
-  referenceDataUrl: string,
-  clipSeconds: ClipSeconds,
-  videoModel: VideoModel,
-  baseDir?: string,
-): Promise<OpenAIVideoJob> {
-  const transport = await getOpenAITransport(baseDir);
-  const response = await transport.fetch("https://api.openai.com/v1/videos", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${transport.apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: videoModel,
-      prompt,
-      size: "1280x720",
-      seconds: toVideoSecondsLiteral(clipSeconds),
-      input_reference: {
-        image_url: referenceDataUrl,
-      },
-    }),
-    ...(transport.extraFetchOptions ?? {}),
-  } as RequestInit);
-  const raw = await response.text();
-
-  if (!response.ok) {
-    let message = `视频生成失败（${response.status}）`;
-
-    if (raw) {
-      try {
-        const parsed = JSON.parse(raw) as {
-          error?: { message?: string | null } | null;
-          message?: string | null;
-        };
-        message = parsed.error?.message || parsed.message || raw;
-      } catch {
-        message = raw;
-      }
-    }
-
-    throw new Error(message);
-  }
-
-  return JSON.parse(raw) as OpenAIVideoJob;
 }
 
 async function generateReferenceVideo(

@@ -1,0 +1,19 @@
+{
+  "runId": "sb-2026-04-23T10-27-23-306Z-kDfNgX",
+  "outputDir": "/Users/xiaoxianjie/888/data/storyboard-runs/linglu-minimal-proof",
+  "sourceType": "text",
+  "sourceInput": "一只会发光的柠檬在夜晚便利店门口抬头看霓虹灯，电影感，短片氛围。",
+  "brandTone": "电影感、克制、叙事清晰、人物和场景稳定",
+  "videoProvider": "openai",
+  "videoModel": "sora-2",
+  "clipSeconds": 4,
+  "generationMode": "grid_preview",
+  "skipVideo": true,
+  "skipQa": false,
+  "selectedShots": [
+    "shot_01"
+  ],
+  "planTitle": "霓虹下的发光柠檬",
+  "gridPath": "/Users/xiaoxianjie/888/data/storyboard-runs/linglu-minimal-proof/storyboard/grid.png",
+  "shots": []
+}

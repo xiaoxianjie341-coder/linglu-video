@@ -50,13 +50,22 @@ async function ensureDir(path: string): Promise<void> {
   await mkdir(path, { recursive: true });
 }
 
-async function readJson<T>(path: string): Promise<T | null> {
+async function readJson<T>(path: string, retryCount = 0): Promise<T | null> {
   try {
     const raw = await readFile(path, "utf8");
+    if (!raw || !raw.trim()) {
+      return null;
+    }
     return JSON.parse(raw) as T;
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") {
       return null;
+    }
+    if (error instanceof SyntaxError && retryCount < 3) {
+      // Possible race condition: file was truncated by a concurrent writeFile
+      // but not yet written. Wait a tiny bit and retry.
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      return readJson<T>(path, retryCount + 1);
     }
     throw error;
   }

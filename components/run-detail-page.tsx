@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import type {
   GenerationRequest,
@@ -55,6 +55,16 @@ export function RunDetailPage({
   const [run, setRun] = useState(initialRun);
   const [requestError, setRequestError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (bottomRef.current) {
+        bottomRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [runId, run.status]);
 
   useEffect(() => {
     if (run.status === "completed" || run.status === "failed") {
@@ -144,7 +154,7 @@ export function RunDetailPage({
 
   return (
     <div className="grid gap-5 xl:grid-cols-[220px_minmax(0,1fr)]">
-      <aside className="rounded-[24px] border border-[color:var(--line-soft)] bg-white/78 p-4 shadow-[0_8px_24px_rgba(15,23,42,0.04)] xl:sticky xl:top-6 xl:h-fit">
+      <aside className="rounded-[24px] border border-[color:var(--line-soft)] bg-white/78 p-4 shadow-[0_8px_24px_rgba(15,23,42,0.04)] xl:sticky xl:top-6 xl:h-fit xl:max-h-[calc(100vh-3rem)] xl:overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-semibold text-[color:var(--ink-900)]">
@@ -257,46 +267,69 @@ export function RunDetailPage({
           </div>
 
           <RunTimeline>
-            <RunInputCard run={run} />
+            <div ref={pipelineStages.length === 0 ? bottomRef : null}>
+              <RunInputCard run={run} />
+            </div>
 
-            {pipelineStages.map((stage) => {
-              const stageContent =
-                stage.id === "planning" ? (
-                  <>
-                    <RunSummaryCard planner={run.planner} />
-                    {run.planner ? <DirectorReport planner={run.planner} /> : null}
-                  </>
-                ) : stage.id === "storyboarding" ? (
-                  <StoryboardGrid runId={run.id} storyboards={run.storyboards} />
-                ) : stage.id === "imaging" ? (
-                  <ImageResult
-                    runId={run.id}
-                    images={run.images}
-                    expectedCount={
-                      imageRequest?.imageCount
-                    }
-                    isGenerating={stage.state === "active"}
-                    previewAspect={
-                      imageRequest?.imageAspect
-                    }
-                  />
-                ) : stage.id === "videoing" ? (
-                  <VideoResult runId={run.id} video={run.video} />
-                ) : null;
+            {(() => {
+              let focusStageId = pipelineStages[0]?.id;
+              for (let i = pipelineStages.length - 1; i >= 0; i--) {
+                const s = pipelineStages[i];
+                if (s.state === "active" || s.state === "failed" || s.state === "completed") {
+                  focusStageId = s.id;
+                  break;
+                }
+              }
 
-              return (
-                <RunStageCard
-                  key={stage.id}
-                  title={stage.title}
-                  description={stage.description}
-                  state={stage.state}
-                  error={stage.error}
-                  isFinal={stage.id === "videoing" || stage.id === "imaging"}
-                >
-                  {stageContent}
-                </RunStageCard>
-              );
-            })}
+              return pipelineStages.map((stage) => {
+                const stageContent =
+                  stage.id === "planning" ? (
+                    <>
+                      <RunSummaryCard planner={run.planner} />
+                      {run.planner ? <DirectorReport planner={run.planner} /> : null}
+                    </>
+                  ) : stage.id === "storyboarding" ? (
+                    <StoryboardGrid runId={run.id} storyboards={run.storyboards} />
+                  ) : stage.id === "imaging" ? (
+                    <ImageResult
+                      runId={run.id}
+                      images={run.images}
+                      expectedCount={
+                        imageRequest?.imageCount
+                      }
+                      isGenerating={stage.state === "active"}
+                      previewAspect={
+                        imageRequest?.imageAspect
+                      }
+                    />
+                  ) : stage.id === "videoing" ? (
+                    <VideoResult runId={run.id} video={run.video} />
+                  ) : null;
+
+                const card = (
+                  <RunStageCard
+                    key={stage.id}
+                    title={stage.title}
+                    description={stage.description}
+                    state={stage.state}
+                    error={stage.error}
+                    isFinal={stage.id === "videoing" || stage.id === "imaging"}
+                  >
+                    {stageContent}
+                  </RunStageCard>
+                );
+
+                if (stage.id === focusStageId) {
+                  return (
+                    <div key={stage.id} ref={bottomRef}>
+                      {card}
+                    </div>
+                  );
+                }
+
+                return card;
+              });
+            })()}
           </RunTimeline>
 
           <div className="sticky bottom-0 mt-6 bg-[linear-gradient(180deg,rgba(245,247,251,0),rgba(245,247,251,0.8)_16%,rgba(245,247,251,0.96)_38%,rgba(245,247,251,1)_100%)] pt-8">

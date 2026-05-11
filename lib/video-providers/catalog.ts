@@ -1,8 +1,9 @@
-export const VIDEO_PROVIDER_IDS = ["openai", "kling", "jimeng"] as const;
+export const VIDEO_PROVIDER_IDS = ["linglu", "openai", "kling", "jimeng"] as const;
 
 export type VideoProviderId = (typeof VIDEO_PROVIDER_IDS)[number];
 
 export const VIDEO_MODEL_OPTIONS = {
+  linglu: [{ value: "gpt-image-1", label: "灵路 gpt-image-1" }],
   openai: [
     { value: "sora-2", label: "Sora 2" },
     { value: "sora-2-pro", label: "Sora 2 Pro" },
